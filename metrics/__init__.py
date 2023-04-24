@@ -2,12 +2,15 @@ from .binary_classification_metrics import get_binary_metrics
 from .regression_metrics import get_regression_metrics
 
 
-def get_all_metrics(preds, labels, task):
+def reverse_los(y, los_info):
+    return y * los_info["los_std"] + los_info["los_mean"]
+
+def get_all_metrics(preds, labels, task, los_info):
     if task == "outcome":
         return get_binary_metrics(preds, labels[:,0])
     elif task == "los":
-        return get_regression_metrics(preds, labels[:,1])
+        return get_regression_metrics(reverse_los(preds, los_info), reverse_los(labels[:,1], los_info))
     elif task == "multitask":
-        return get_binary_metrics(preds[:,0], labels[:,0]) | get_regression_metrics(preds[:,1], labels[:,1])
+        return get_binary_metrics(preds[:,0], labels[:,0]) | get_regression_metrics(reverse_los(preds[:,1], los_info), reverse_los(labels[:,1], los_info))
     else:
         raise ValueError("Task not supported")
