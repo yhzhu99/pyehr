@@ -8,7 +8,6 @@ mae = MeanAbsoluteError()
 r2 = R2Score()
 
 def get_regression_metrics(preds, labels):
-    labels = labels[:, 1]
     mse(preds, labels)
     rmse(preds, labels)
     mae(preds, labels)

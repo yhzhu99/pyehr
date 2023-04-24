@@ -7,7 +7,6 @@ auroc = AUROC(task="binary", threshold=threshold)
 auprc = AveragePrecision(task="binary", threshold=threshold)
 
 def get_binary_metrics(preds, labels):
-    labels = labels[:, 0]
     # convert labels type to int
     labels = labels.type(torch.int)
     accuracy(preds, labels)
