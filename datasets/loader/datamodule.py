@@ -34,13 +34,13 @@ class EhrDataModule(L.LightningDataModule):
             self.test_dataset = EhrDataset(self.data_path, mode='test')
 
     def train_dataloader(self):
-        return data.DataLoader(self.train_dataset, batch_size=self.batch_size, collate_fn=self.pad_collate)
+        return data.DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True , collate_fn=self.pad_collate)
 
     def val_dataloader(self):
-        return data.DataLoader(self.val_dataset, batch_size=self.batch_size, collate_fn=self.pad_collate)
+        return data.DataLoader(self.val_dataset, batch_size=self.batch_size, shuffle=False , collate_fn=self.pad_collate)
 
     def test_dataloader(self):
-        return data.DataLoader(self.test_dataset, batch_size=self.batch_size, collate_fn=self.pad_collate)
+        return data.DataLoader(self.test_dataset, batch_size=self.batch_size, shuffle=False , collate_fn=self.pad_collate)
 
     def pad_collate(self, batch):
         xx, yy, pid = zip(*batch)
