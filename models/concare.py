@@ -61,16 +61,16 @@ class FinalAttentionQKV(nn.Module):
         self.softmax = nn.Softmax(dim=1)
         self.sigmoid = nn.Sigmoid()
 
-    def forward(self, input):
+    def forward(self, x):
 
         (
             batch_size,
             time_step,
             lab_dim,
-        ) = input.size()  # batch_size * lab_dim + 1 * hidden_dim(i)
-        input_q = self.W_q(input[:, -1, :])  # b h
-        input_k = self.W_k(input)  # b t h
-        input_v = self.W_v(input)  # b t h
+        ) = x.size()  # batch_size * lab_dim + 1 * hidden_dim(i)
+        input_q = self.W_q(x[:, -1, :])  # b h
+        input_k = self.W_k(x)  # b t h
+        input_v = self.W_v(x)  # b t h
 
         if self.attention_type == "add":  # B*T*I  @ H*I
 
@@ -191,7 +191,7 @@ class MultiHeadedAttention(nn.Module):
         lab_dim = query.size(1)  # i+1
         feature_dim = query.size(1)  # i+1
 
-        # input size -> # batch_size * d_input * hidden_dim
+        # x size -> # batch_size * d_input * hidden_dim
 
         # d_model => h * d_k
         query, key, value = [
@@ -354,13 +354,13 @@ class SingleAttention(nn.Module):
         self.sigmoid = nn.Sigmoid()
         self.relu = nn.ReLU()
 
-    def forward(self, input, mask, device):
+    def forward(self, x, mask, device):
 
         (
             batch_size,
             time_step,
             lab_dim,
-        ) = input.size()  # batch_size * time_step * hidden_dim(i)
+        ) = x.size()  # batch_size * time_step * hidden_dim(i)
 
         time_decays = (
             torch.tensor(range(time_step - 1, -1, -1), dtype=torch.float32)
@@ -371,14 +371,14 @@ class SingleAttention(nn.Module):
         b_time_decays = time_decays.repeat(batch_size, 1, 1) + 1  # b t 1
 
         if self.attention_type == "add":  # B*T*I  @ H*I
-            last_visit = get_last_visit(input, mask)
+            last_visit = get_last_visit(x, mask)
             q = torch.matmul(last_visit, self.Wt)  # b h
             q = torch.reshape(q, (batch_size, 1, self.attention_hidden_dim))  # B*1*H
             if self.time_aware == True:
-                k = torch.matmul(input, self.Wx)  # b t h
+                k = torch.matmul(x, self.Wx)  # b t h
                 time_hidden = torch.matmul(b_time_decays, self.Wtime_aware)  # b t h
             else:
-                k = torch.matmul(input, self.Wx)  # b t h
+                k = torch.matmul(x, self.Wx)  # b t h
             h = q + k + self.bh  # b t h
             if self.time_aware:
                 h += time_hidden
@@ -386,18 +386,18 @@ class SingleAttention(nn.Module):
             e = torch.matmul(h, self.Wa) + self.ba  # B*T*1
             e = torch.reshape(e, (batch_size, time_step))  # b t
         elif self.attention_type == "mul":
-            last_visit = get_last_visit(input, mask)
+            last_visit = get_last_visit(x, mask)
             e = torch.matmul(last_visit, self.Wa)  # b i
             e = (
-                torch.matmul(e.unsqueeze(1), input.permute(0, 2, 1)).reshape(
+                torch.matmul(e.unsqueeze(1), x.permute(0, 2, 1)).reshape(
                     batch_size, time_step
                 )
                 + self.ba
             )  # b t
         elif self.attention_type == "concat":
-            last_visit = get_last_visit(input, mask)
+            last_visit = get_last_visit(x, mask)
             q = last_visit.unsqueeze(1).repeat(1, time_step, 1)  # b t i
-            k = input
+            k = x
             c = torch.cat((q, k), dim=-1)  # B*T*2I
             if self.time_aware:
                 c = torch.cat((c, b_time_decays), dim=-1)  # B*T*2I+1
@@ -407,10 +407,10 @@ class SingleAttention(nn.Module):
             e = torch.reshape(e, (batch_size, time_step))  # b t
 
         elif self.attention_type == "new":
-            last_visit = get_last_visit(input, mask)
+            last_visit = get_last_visit(x, mask)
             q = torch.matmul(last_visit, self.Wt)  # b h
             q = torch.reshape(q, (batch_size, 1, self.attention_hidden_dim))  # B*1*H
-            k = torch.matmul(input, self.Wx)  # b t h
+            k = torch.matmul(x, self.Wx)  # b t h
             dot_product = torch.matmul(q, k.transpose(1, 2)).reshape(
                 batch_size, time_step
             )  # b t
@@ -427,12 +427,12 @@ class SingleAttention(nn.Module):
         if mask is not None:
             e = e.masked_fill(mask == 0, -1e9)
         a = self.softmax(e)  # B*T
-        v = torch.matmul(a.unsqueeze(1), input).reshape(batch_size, lab_dim)  # B*I
+        v = torch.matmul(a.unsqueeze(1), x).reshape(batch_size, lab_dim)  # B*I
 
         return v, a
 
 
-class ConCare(nn.Module):
+class ConCareLayer(nn.Module):
     """ConCare layer.
 
     Paper: Liantao Ma et al. Concare: Personalized clinical feature embedding via capturing the healthcare context. AAAI 2020.
@@ -451,9 +451,9 @@ class ConCare(nn.Module):
 
     Examples:
         >>> from pyhealth.models import ConCare
-        >>> input = torch.randn(3, 128, 64)  # [batch size, sequence len, feature_size]
+        >>> x = torch.randn(3, 128, 64)  # [batch size, sequence len, feature_size]
         >>> layer = ConCare(64)
-        >>> c, _ = layer(input)
+        >>> c, _ = layer(x)
         >>> c.shape
         torch.Size([3, 128])
     """
@@ -466,9 +466,8 @@ class ConCare(nn.Module):
         num_head: int = 4,
         pe_hidden: int = 64,
         dropout: int = 0.5,
-        **kwargs
     ):
-        super(ConCare, self).__init__()
+        super(ConCareLayer, self).__init__()
 
         # hyperparameters
         self.lab_dim = lab_dim
@@ -530,47 +529,63 @@ class ConCare(nn.Module):
         self.sigmoid = nn.Sigmoid()
         self.relu = nn.ReLU()
 
-    def concare_encoder(self, input, static=None, mask=None):
-        # input shape [batch_size, timestep, feature_dim]
+    def forward(
+        self,
+        x: torch.tensor,
+        static: Optional[torch.tensor] = None,
+        mask: Optional[torch.tensor] = None,
+    ) -> Tuple[torch.tensor]:
+        """Forward propagation.
 
+        Args:
+            x: a tensor of shape [batch size, sequence len, lab_dim].
+            static: a tensor of shape [batch size, demo_dim].
+            mask: an optional tensor of shape [batch size, sequence len], where
+                1 indicates valid and 0 indicates invalid.
+
+        Returns:
+            output: a tensor of shape [batch size, fusion_dim] representing the
+                patient embedding.
+        """
+        # rnn will only apply dropout between layers
         if self.demo_dim > 0:
             demo_main = self.tanh(self.demo_proj_main(static)).unsqueeze(
                 1
             )  # b hidden_dim
 
-        batch_size = input.size(0)
-        time_step = input.size(1)
-        feature_dim = input.size(2)
+        batch_size = x.size(0)
+        time_step = x.size(1)
+        feature_dim = x.size(2)
 
         if self.transformer_hidden % self.num_head != 0:
             raise ValueError("transformer_hidden must be divisible by num_head")
 
         # forward
         GRU_embeded_input = self.GRUs[0](
-            input[:, :, 0].unsqueeze(-1).to(device=input.device),
+            x[:, :, 0].unsqueeze(-1).to(device=x.device),
             torch.zeros(batch_size, self.hidden_dim)
-            .to(device=input.device)
+            .to(device=x.device)
             .unsqueeze(0),
         )[
             0
         ]  # b t h
         Attention_embeded_input = self.LastStepAttentions[0](
-            GRU_embeded_input, mask, input.device
+            GRU_embeded_input, mask, x.device
         )[0].unsqueeze(
             1
         )  # b 1 h
 
         for i in range(feature_dim - 1):
             embeded_input = self.GRUs[i + 1](
-                input[:, :, i + 1].unsqueeze(-1),
+                x[:, :, i + 1].unsqueeze(-1),
                 torch.zeros(batch_size, self.hidden_dim)
-                .to(device=input.device)
+                .to(device=x.device)
                 .unsqueeze(0),
             )[
                 0
             ]  # b 1 h
             embeded_input = self.LastStepAttentions[i + 1](
-                embeded_input, mask, input.device
+                embeded_input, mask, x.device
             )[0].unsqueeze(
                 1
             )  # b 1 h
@@ -588,7 +603,7 @@ class ConCare(nn.Module):
 
         contexts = self.SublayerConnection(
             posi_input,
-            lambda x: self.MultiHeadedAttention(
+            lambda _: self.MultiHeadedAttention(
                 posi_input, posi_input, posi_input, None
             ),
         )  # # batch_size * d_input * hidden_dim
@@ -597,11 +612,35 @@ class ConCare(nn.Module):
         contexts = contexts[0]
 
         contexts = self.SublayerConnection(
-            contexts, lambda x: self.PositionwiseFeedForward(contexts)
+            contexts, lambda _: self.PositionwiseFeedForward(contexts)
         )[0]
 
         weighted_contexts, a = self.FinalAttentionQKV(contexts)
         return weighted_contexts, DeCov_loss
+
+class ConCare(nn.Module):
+    def __init__(
+        self,
+        lab_dim: int,
+        demo_dim: int = 0,
+        hidden_dim: int = 128,
+        num_head: int = 4,
+        pe_hidden: int = 64,
+        dropout: int = 0.0,
+        **kwargs
+    ):
+        super(ConCare, self).__init__()
+
+        # hyperparameters
+        self.lab_dim = lab_dim
+        self.hidden_dim = hidden_dim  # d_model
+        self.transformer_hidden = hidden_dim
+        self.num_head = num_head
+        self.pe_hidden = pe_hidden
+        # self.output_dim = output_dim
+        self.dropout = nn.Dropout(p=dropout)
+        self.demo_dim = demo_dim
+        self.concare_layer = ConCareLayer(lab_dim=lab_dim, demo_dim=demo_dim, hidden_dim=hidden_dim, num_head=num_head, pe_hidden=pe_hidden, dropout=dropout)
 
     def forward(
         self,
@@ -628,10 +667,11 @@ class ConCare(nn.Module):
         for cur_time in range(time_steps):
             cur_x = x[:, :cur_time+1, :]
             cur_mask = mask[:, :cur_time+1]
-            cur_out, decov = self.concare_encoder(cur_x, static, cur_mask)
+            cur_out, decov = self.concare_layer(cur_x, static, cur_mask)
             out[:, cur_time, :] = cur_out
             decov_loss += decov
         decov_loss /= time_steps
+        print("decov_loss: ", decov_loss, out.shape)
         out = self.dropout(out)
         return out, decov_loss
 
@@ -647,7 +687,7 @@ if __name__ == "__main__":
     lens = torch.tensor([max_len , 2, 9])
     mask = generate_mask(lens)
     model = ConCare(lab_dim, demo_dim, hidden_dim, 4, 325, 0.5)
-    out = model(lab, static, mask)
+    out, decov_loss  = model(lab, static, mask)
     print(out.shape)
     # x = torch.randn(2, 13, 75)
     # lens = torch.tensor([13,2])
