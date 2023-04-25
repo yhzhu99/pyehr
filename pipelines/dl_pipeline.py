@@ -1,0 +1,66 @@
+import os
+
+import lightning as L
+import torch
+import torch.nn as nn
+
+import models
+from datasets.loader.unpad import unpad_y
+from losses import get_simple_loss
+from metrics import get_all_metrics
+
+
+class DlPipeline(L.LightningModule):
+    def __init__(self, config):
+        super().__init__()
+        self.config = config
+        self.save_hyperparameters()
+        self.hidden_dim = config["hidden_dim"]
+        self.input_dim = config["input_dim"]
+        self.output_dim = config["output_dim"]
+        model_class = getattr(models, config['model_name'])
+        self.ehr_encoder = model_class(**config)
+        if config["task"] == "outcome":
+            self.head = nn.Sequential(nn.Linear(self.hidden_dim, self.output_dim), nn.Dropout(0.0), nn.Sigmoid())
+        elif config["task"] == "los":
+            self.head = nn.Sequential(nn.Linear(self.hidden_dim, self.output_dim), nn.Dropout(0.0))
+        elif config["task"] == "multitask":
+            self.head = models.heads.MultitaskHead(self.hidden_dim, self.output_dim, drop=0.0)
+
+        self.validation_step_outputs = []
+
+    def forward(self, x):
+        embedding = self.ehr_encoder(x)
+        y_hat = self.head(embedding)
+        return y_hat, embedding
+
+    def training_step(self, batch, batch_idx):
+        x, y, lens, pid = batch
+        y_hat, embedding = self(x)
+        y_hat, y = unpad_y(y_hat, y, lens)
+        loss = get_simple_loss(y_hat, y, self.config["task"])
+        self.log("train_loss", loss)
+        return loss
+    def validation_step(self, batch, batch_idx):
+        x, y, lens, pid = batch
+        y_hat, embedding = self(x)
+        y_hat, y = unpad_y(y_hat, y, lens)
+        loss = get_simple_loss(y_hat, y, self.config["task"])
+        self.log("val_loss", loss)
+        outs = {'y_pred': y_hat, 'y_true': y, 'val_loss': loss}
+        self.validation_step_outputs.append(outs)
+        return loss
+    def on_validation_epoch_end(self):
+        y_pred = torch.cat([x['y_pred'] for x in self.validation_step_outputs])
+        y_true = torch.cat([x['y_true'] for x in self.validation_step_outputs])
+        loss = torch.stack([x['val_loss'] for x in self.validation_step_outputs]).mean()
+        self.log("val_loss_epoch", loss)
+        metrics = get_all_metrics(y_pred, y_true, self.config["task"], self.config["los_info"])
+        for k, v in metrics.items(): self.log(k, v)
+        main_metric = metrics[self.config["main_metric"]]
+        self.validation_step_outputs.clear()
+        return main_metric
+
+    def configure_optimizers(self):
+        optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
+        return optimizer
