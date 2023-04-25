@@ -11,7 +11,7 @@ from pipelines import DlPipeline
 model_name = "GRU"
 stage = "tune"
 dataset = "tjh"
-task = "multitask" # ["outcome", "los", "multitask"]
+task = "outcome" # ["outcome", "los", "multitask"]
 fold = 0
 tjh_config = {"demo_dim": 2, "lab_dim": 73, "input_dim": 75,}
 cdsl_config = {"demo_dim": 2, "lab_dim": 97, "input_dim": 99,}
@@ -21,9 +21,10 @@ elif dataset == "cdsl": dataset_config = cdsl_config
 output_dim = 1
 main_metric = "mae" if task == "los" else "auroc"
 epochs = 100
-patience = 20
+patience = 10
+learning_rate = 1e-3
 
-config = {"stage": stage, "task": task, "dataset": dataset, "output_dim": output_dim, "fold": fold, "epochs": epochs, "patience": patience, "model_name": model_name, "main_metric": main_metric}
+config = {"stage": stage, "task": task, "dataset": dataset, "output_dim": output_dim, "fold": fold, "epochs": epochs, "patience": patience, "model_name": model_name, "main_metric": main_metric, "learning_rate": learning_rate}
 config = config | dataset_config
 
 
@@ -67,14 +68,11 @@ search_space = {"hidden_dim": [64], "batch_size": [64]}
 study = optuna.create_study(direction=direction, sampler=optuna.samplers.GridSampler(search_space))
 study.optimize(objective, n_trials=100)
 
-
-
 trial = study.best_trial
 config = config | trial.params
 
 # save the config dict to toml file, with name of {model}-{task}-{score}.toml
 with open(f'./checkpoints/{config["stage"]}/{config["dataset"]}/{config["task"]}/{config["model_name"]}_best.toml', 'w') as f:
     toml.dump(config, f)
-
 
 print(config)
