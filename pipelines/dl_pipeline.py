@@ -8,6 +8,7 @@ import models
 from datasets.loader.unpad import unpad_y
 from losses import get_simple_loss
 from metrics import get_all_metrics
+from models.utils import generate_mask, get_last_visit
 
 
 class DlPipeline(L.LightningModule):
@@ -15,8 +16,11 @@ class DlPipeline(L.LightningModule):
         super().__init__()
         self.config = config
         self.save_hyperparameters()
-        self.hidden_dim = config["hidden_dim"]
+        self.demo_dim = config["demo_dim"]
+        self.lab_dim = config["lab_dim"]
         self.input_dim = config["input_dim"]
+        assert self.input_dim == self.demo_dim + self.lab_dim
+        self.hidden_dim = config["hidden_dim"]
         self.output_dim = config["output_dim"]
         self.learning_rate = config["learning_rate"]
         self.task = config["task"]
@@ -35,23 +39,36 @@ class DlPipeline(L.LightningModule):
 
         self.validation_step_outputs = []
 
-    def forward(self, x):
-        embedding = self.ehr_encoder(x)
-        y_hat = self.head(embedding)
-        return y_hat, embedding
+    def forward(self, x, lens):
+        if self.model_name == "ConCare":
+            x_demo, x_lab, mask = x[:, 0, :self.demo_dim], x[:, :, self.demo_dim:], generate_mask(lens)
+            embedding, decov_loss = self.ehr_encoder(x_lab, x_demo, mask)
+            y_hat = self.head(embedding)
+            return y_hat, embedding, decov_loss
+        else:
+            embedding = self.ehr_encoder(x)
+            y_hat = self.head(embedding)
+            return y_hat, embedding
 
+    def _get_loss(self, x, y, lens):
+        if self.model_name == "ConCare":
+            y_hat, embedding, decov_loss = self(x, lens)
+            y_hat, y = unpad_y(y_hat, y, lens)
+            loss = get_simple_loss(y_hat, y, self.task)
+            loss += decov_loss
+        else:
+            y_hat, embedding = self(x, lens)
+            y_hat, y = unpad_y(y_hat, y, lens)
+            loss = get_simple_loss(y_hat, y, self.task)
+        return loss, y, y_hat
     def training_step(self, batch, batch_idx):
         x, y, lens, pid = batch
-        y_hat, embedding = self(x)
-        y_hat, y = unpad_y(y_hat, y, lens)
-        loss = get_simple_loss(y_hat, y, self.task)
+        loss, y, y_hat = self._get_loss(x, y, lens)
         self.log("train_loss", loss)
         return loss
     def validation_step(self, batch, batch_idx):
         x, y, lens, pid = batch
-        y_hat, embedding = self(x)
-        y_hat, y = unpad_y(y_hat, y, lens)
-        loss = get_simple_loss(y_hat, y, self.task)
+        loss, y, y_hat = self._get_loss(x, y, lens)
         self.log("val_loss", loss)
         outs = {'y_pred': y_hat, 'y_true': y, 'val_loss': loss}
         self.validation_step_outputs.append(outs)
@@ -67,5 +84,5 @@ class DlPipeline(L.LightningModule):
         self.validation_step_outputs.clear()
         return main_metric
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
+        optimizer = torch.optim.AdamW(self.parameters(), lr=self.learning_rate)
         return optimizer
