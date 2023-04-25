@@ -93,7 +93,7 @@ def normalize_dataframe(train_df, val_df, test_df, normalize_features):
     default_fill: pd.DataFrame = (train_median-train_mean)/(train_std+1e-12)
 
     # LOS info
-    los_info = {"los_mean": train_mean["LOS"], "los_std": train_std["LOS"], "los_median": train_median["LOS"]}
+    los_info = {"los_mean": train_mean["LOS"].item(), "los_std": train_std["LOS"].item(), "los_median": train_median["LOS"].item()}
 
     # Z-score normalize the train, val, and test sets with train_mean and train_std
     train_df[normalize_features] = (train_df[normalize_features] - train_mean) / (train_std+1e-12)
