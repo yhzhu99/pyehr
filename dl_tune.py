@@ -8,7 +8,7 @@ from datasets.loader.datamodule import EhrDataModule
 from datasets.loader.load_los_info import get_los_info
 from pipelines import DlPipeline
 
-model_name = "GRU"
+model_name = "GRASP"
 stage = "tune"
 dataset = "tjh"
 task = "outcome" # ["outcome", "los", "multitask"]
