@@ -1,3 +1,4 @@
+from .adacare import AdaCare
 from .agent import Agent
 from .concare import ConCare
 from .grasp import GRASP

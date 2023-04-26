@@ -50,7 +50,12 @@ class DlPipeline(L.LightningModule):
             embedding = self.ehr_encoder(x_lab, x_demo, mask)
             y_hat = self.head(embedding)
             return y_hat, embedding
-        else:
+        elif self.model_name in ["AdaCare"]:
+            mask = generate_mask(lens)
+            embedding = self.ehr_encoder(x, mask)
+            y_hat = self.head(embedding)
+            return y_hat, embedding
+        elif self.model_name in ["GRU", "LSTM", "RNN", "MLP"]:
             embedding = self.ehr_encoder(x)
             y_hat = self.head(embedding)
             return y_hat, embedding
