@@ -8,7 +8,7 @@ from datasets.loader.datamodule import EhrDataModule
 from datasets.loader.load_los_info import get_los_info
 from pipelines import DlPipeline
 
-model_name = "GRASP"
+model_name = "Agent"
 stage = "tune"
 dataset = "tjh"
 task = "outcome" # ["outcome", "los", "multitask"]
@@ -19,7 +19,7 @@ dataset_config = {}
 if dataset == "tjh": dataset_config = tjh_config
 elif dataset == "cdsl": dataset_config = cdsl_config
 output_dim = 1
-main_metric = "mae" if task == "los" else "auroc"
+main_metric = "mae" if task == "los" else "auprc"
 epochs = 100
 patience = 10
 learning_rate = 1e-3
