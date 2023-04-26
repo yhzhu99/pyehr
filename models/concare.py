@@ -671,7 +671,6 @@ class ConCare(nn.Module):
             out[:, cur_time, :] = cur_out
             decov_loss += decov
         decov_loss /= time_steps
-        print("decov_loss: ", decov_loss, out.shape)
         out = self.dropout(out)
         return out, decov_loss
 
