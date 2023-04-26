@@ -45,7 +45,7 @@ class DlPipeline(L.LightningModule):
             embedding, decov_loss = self.ehr_encoder(x_lab, x_demo, mask)
             y_hat = self.head(embedding)
             return y_hat, embedding, decov_loss
-        elif self.model_name == "GRASP":
+        elif self.model_name in ["GRASP", "Agent"]:
             x_demo, x_lab, mask = x[:, 0, :self.demo_dim], x[:, :, self.demo_dim:], generate_mask(lens)
             embedding = self.ehr_encoder(x_lab, x_demo, mask)
             y_hat = self.head(embedding)

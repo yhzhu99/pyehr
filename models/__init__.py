@@ -1,3 +1,4 @@
+from .agent import Agent
 from .concare import ConCare
 from .grasp import GRASP
 from .gru import GRU
