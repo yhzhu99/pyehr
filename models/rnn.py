@@ -90,9 +90,8 @@ class RNN(nn.Module):
 
         self.proj = nn.Linear(input_dim, hidden_dim)
         self.act = act_layer()
-        self.rnn = nn.RNN(input_size=hidden_dim, hidden_size=hidden_dim, num_layers=1, batch_first=True)
+        self.rnn = nn.RNN(input_size=input_dim, hidden_size=hidden_dim, num_layers=1, batch_first=True)
 
     def forward(self, x, **kwargs):
-        x = self.proj(x)
         x, _ = self.rnn(x)
         return x

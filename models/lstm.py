@@ -9,9 +9,8 @@ class LSTM(nn.Module):
 
         self.proj = nn.Linear(input_dim, hidden_dim)
         self.act = act_layer()
-        self.lstm = nn.LSTM(input_size=hidden_dim, hidden_size=hidden_dim, num_layers=1, batch_first=True)
+        self.lstm = nn.LSTM(input_size=input_dim, hidden_size=hidden_dim, num_layers=1, batch_first=True)
 
     def forward(self, x, **kwargs):
-        x = self.proj(x)
         x, _ = self.lstm(x)
         return x
