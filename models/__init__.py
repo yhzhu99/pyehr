@@ -6,4 +6,5 @@ from .gru import GRU
 from .heads import MultitaskHead
 from .lstm import LSTM
 from .mlp import MLP
+from .retain import RETAIN
 from .rnn import RNN
