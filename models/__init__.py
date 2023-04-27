@@ -9,3 +9,4 @@ from .mlp import MLP
 from .retain import RETAIN
 from .rnn import RNN
 from .tcn import TCN
+from .transformer import Transformer
