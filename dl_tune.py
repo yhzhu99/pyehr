@@ -8,7 +8,7 @@ from datasets.loader.datamodule import EhrDataModule
 from datasets.loader.load_los_info import get_los_info
 from pipelines import DlPipeline
 
-model_name = "Agent"
+model_name = "StageNet"
 stage = "tune"
 dataset = "tjh"
 task = "outcome" # ["outcome", "los", "multitask"]
@@ -24,7 +24,7 @@ epochs = 100
 patience = 10
 learning_rate = 1e-3
 
-config = {"stage": stage, "task": task, "dataset": dataset, "output_dim": output_dim, "fold": fold, "epochs": epochs, "patience": patience, "model_name": model_name, "main_metric": main_metric, "learning_rate": learning_rate}
+config = {"stage": stage, "task": task, "dataset": dataset, "output_dim": output_dim, "fold": fold, "epochs": epochs, "patience": patience, "model_name": model_name, "main_metric": main_metric, "learning_rate": learning_rate, "chunk_size": 64}
 config = config | dataset_config
 
 
