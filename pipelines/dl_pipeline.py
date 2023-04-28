@@ -18,14 +18,14 @@ class DlPipeline(L.LightningModule):
         self.save_hyperparameters()
         self.demo_dim = config["demo_dim"]
         self.lab_dim = config["lab_dim"]
-        self.input_dim = config["input_dim"]
-        assert self.input_dim == self.demo_dim + self.lab_dim
+        self.input_dim = self.demo_dim + self.lab_dim
+        config["input_dim"] = self.input_dim
         self.hidden_dim = config["hidden_dim"]
         self.output_dim = config["output_dim"]
         self.learning_rate = config["learning_rate"]
         self.task = config["task"]
         self.los_info = config["los_info"]
-        self.model_name = config["model_name"]
+        self.model_name = config["model"]
         self.main_metric = config["main_metric"]
 
         model_class = getattr(models, self.model_name)
@@ -65,7 +65,7 @@ class DlPipeline(L.LightningModule):
             y_hat, embedding, decov_loss = self(x, lens)
             y_hat, y = unpad_y(y_hat, y, lens)
             loss = get_simple_loss(y_hat, y, self.task)
-            loss += decov_loss
+            loss += 10*decov_loss
         else:
             y_hat, embedding = self(x, lens)
             y_hat, y = unpad_y(y_hat, y, lens)
