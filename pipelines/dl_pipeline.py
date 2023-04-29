@@ -14,8 +14,8 @@ from models.utils import generate_mask, get_last_visit
 class DlPipeline(L.LightningModule):
     def __init__(self, config):
         super().__init__()
-        self.config = config
-        self.save_hyperparameters()
+        # self.config = config
+        # self.save_hyperparameters()
         self.demo_dim = config["demo_dim"]
         self.lab_dim = config["lab_dim"]
         self.input_dim = self.demo_dim + self.lab_dim
