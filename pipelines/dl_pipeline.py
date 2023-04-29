@@ -43,20 +43,21 @@ class DlPipeline(L.LightningModule):
         if self.model_name == "ConCare":
             x_demo, x_lab, mask = x[:, 0, :self.demo_dim], x[:, :, self.demo_dim:], generate_mask(lens)
             embedding, decov_loss = self.ehr_encoder(x_lab, x_demo, mask)
+            embedding, decov_loss = embedding.to(x.device), decov_loss.to(x.device)
             y_hat = self.head(embedding)
             return y_hat, embedding, decov_loss
         elif self.model_name in ["GRASP", "Agent"]:
             x_demo, x_lab, mask = x[:, 0, :self.demo_dim], x[:, :, self.demo_dim:], generate_mask(lens)
-            embedding = self.ehr_encoder(x_lab, x_demo, mask)
+            embedding = self.ehr_encoder(x_lab, x_demo, mask).to(x.device)
             y_hat = self.head(embedding)
             return y_hat, embedding
         elif self.model_name in ["AdaCare", "RETAIN", "TCN", "Transformer", "StageNet"]:
             mask = generate_mask(lens)
-            embedding = self.ehr_encoder(x, mask)
+            embedding = self.ehr_encoder(x, mask).to(x.device)
             y_hat = self.head(embedding)
             return y_hat, embedding
         elif self.model_name in ["GRU", "LSTM", "RNN", "MLP"]:
-            embedding = self.ehr_encoder(x)
+            embedding = self.ehr_encoder(x).to(x.device)
             y_hat = self.head(embedding)
             return y_hat, embedding
 
@@ -84,9 +85,9 @@ class DlPipeline(L.LightningModule):
         self.validation_step_outputs.append(outs)
         return loss
     def on_validation_epoch_end(self):
-        y_pred = torch.cat([x['y_pred'] for x in self.validation_step_outputs])
-        y_true = torch.cat([x['y_true'] for x in self.validation_step_outputs])
-        loss = torch.stack([x['val_loss'] for x in self.validation_step_outputs]).mean()
+        y_pred = torch.cat([x['y_pred'] for x in self.validation_step_outputs]).detach().cpu()
+        y_true = torch.cat([x['y_true'] for x in self.validation_step_outputs]).detach().cpu()
+        loss = torch.stack([x['val_loss'] for x in self.validation_step_outputs]).mean().detach().cpu()
         self.log("val_loss_epoch", loss)
         metrics = get_all_metrics(y_pred, y_true, self.task, self.los_info)
         for k, v in metrics.items(): self.log(k, v)

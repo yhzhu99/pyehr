@@ -11,8 +11,8 @@ def generate_mask(seq_lens):
     Returns:
         mask: [batch size, max_len]
     """
-    max_len = torch.max(seq_lens)
-    mask = torch.arange(max_len).expand(len(seq_lens), max_len)
+    max_len = torch.max(seq_lens).to(seq_lens.device)
+    mask = torch.arange(max_len).expand(len(seq_lens), max_len).to(seq_lens.device)
     mask = mask < seq_lens.unsqueeze(1)
     return mask
 
