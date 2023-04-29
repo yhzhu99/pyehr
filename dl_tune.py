@@ -2,11 +2,11 @@ import random
 
 import hydra
 import lightning as L
+import wandb
 from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint
 from lightning.pytorch.loggers import CSVLogger, WandbLogger
 from omegaconf import DictConfig, OmegaConf
 
-import wandb
 from datasets.loader.datamodule import EhrDataModule
 from datasets.loader.load_los_info import get_los_info
 from pipelines import DlPipeline
@@ -27,12 +27,12 @@ sweep_configuration = {
     'metric': {'goal': 'minimize', 'name': 'val_loss'},
     'parameters': 
     {
-        'task': {'values': ['outcome']},
+        'task': {'values': ['outcome', 'los', 'multitask']},
         'dataset': {'values': ['tjh']},
-        'model': {'values': ['GRU']},
-        'batch_size': {'values': [32]},
-        'hidden_dim': {'values': [32]},
-        'learning_rate': {'values': [1e-3]},
+        'model': {'values': ['MLP', 'GRU', 'RNN', 'LSTM', 'TCN', 'Transformer', 'AdaCare', 'Agent', 'GRASP', 'RETAIN', 'StageNet', 'Concare']},
+        'batch_size': {'values': [32, 64]},
+        'hidden_dim': {'values': [32, 64]},
+        'learning_rate': {'values': [1e-2, 1e-3, 1e-4]},
         'fold': {'values': [0]},
     }
 }
@@ -58,12 +58,10 @@ def run_experiment():
         early_stopping_callback = EarlyStopping(monitor="mae", patience=wandb.config["patience"], mode="min",)
         checkpoint_callback = ModelCheckpoint(monitor="mae", mode="min")
 
-    print(wandb.config.as_dict(), type(wandb.config.as_dict()))
     # train/val/test
     pipeline = DlPipeline(wandb.config.as_dict())
     trainer = L.Trainer(max_epochs=wandb.config["epochs"], logger=wandb_logger, callbacks=[early_stopping_callback, checkpoint_callback])
     trainer.fit(pipeline, dm)
-
     print("Best Score", checkpoint_callback.best_model_score)
 
 if __name__ == "__main__":
