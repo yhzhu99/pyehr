@@ -7,7 +7,7 @@ import torch.nn as nn
 import models
 from datasets.loader.unpad import unpad_y
 from losses import get_simple_loss
-from metrics import get_all_metrics
+from metrics import get_all_metrics, check_metric_is_better
 from models.utils import generate_mask, get_last_visit
 
 
@@ -27,6 +27,10 @@ class DlPipeline(L.LightningModule):
         self.los_info = config["los_info"]
         self.model_name = config["model"]
         self.main_metric = config["main_metric"]
+        self.cur_best_performance = {}
+
+        if self.model_name == "StageNet":
+            config["chunk_size"] = self.hidden_dim
 
         model_class = getattr(models, self.model_name)
         self.ehr_encoder = model_class(**config)
@@ -91,9 +95,12 @@ class DlPipeline(L.LightningModule):
         self.log("val_loss_epoch", loss)
         metrics = get_all_metrics(y_pred, y_true, self.task, self.los_info)
         for k, v in metrics.items(): self.log(k, v)
-        main_metric = metrics[self.main_metric]
+        main_score = metrics[self.main_metric]
+        if check_metric_is_better(self.cur_best_performance, self.main_metric, main_score, self.task):
+            self.cur_best_performance = metrics
+            for k, v in metrics.items(): self.log("best_"+k, v)
         self.validation_step_outputs.clear()
-        return main_metric
+        return main_score
     def configure_optimizers(self):
         optimizer = torch.optim.AdamW(self.parameters(), lr=self.learning_rate)
         return optimizer

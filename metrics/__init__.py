@@ -1,5 +1,6 @@
 from .binary_classification_metrics import get_binary_metrics
 from .regression_metrics import get_regression_metrics
+from .utils import check_metric_is_better
 
 
 def reverse_los(y, los_info):
