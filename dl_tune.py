@@ -11,6 +11,10 @@ from datasets.loader.datamodule import EhrDataModule
 from datasets.loader.load_los_info import get_los_info
 from pipelines import DlPipeline
 
+# import os
+# os.environ['WANDB_MODE'] = 'offline'
+# os.environ['WANDB_LOG_LEVEL'] = 'debug'
+
 project_name = "pyehr"
 
 hydra.initialize(config_path="configs", version_base=None)
@@ -29,9 +33,9 @@ sweep_configuration = {
     {
         'task': {'values': ['outcome', 'los', 'multitask']},
         'dataset': {'values': ['tjh']},
-        'model': {'values': ['MLP', 'GRU', 'RNN', 'LSTM', 'TCN', 'Transformer', 'AdaCare', 'Agent', 'GRASP', 'RETAIN', 'StageNet', 'Concare']},
-        'batch_size': {'values': [32, 64]},
-        'hidden_dim': {'values': [32, 64]},
+        'model': {'values': ['MLP', 'GRU', 'RNN', 'LSTM', 'TCN', 'Transformer', 'AdaCare', 'Agent', 'GRASP', 'RETAIN', 'StageNet', 'ConCare']},
+        'batch_size': {'values': [64]},
+        'hidden_dim': {'values': [32, 64, 128]},
         'learning_rate': {'values': [1e-2, 1e-3, 1e-4]},
         'fold': {'values': [0]},
     }
@@ -60,7 +64,7 @@ def run_experiment():
 
     # train/val/test
     pipeline = DlPipeline(wandb.config.as_dict())
-    trainer = L.Trainer(max_epochs=wandb.config["epochs"], logger=wandb_logger, callbacks=[early_stopping_callback, checkpoint_callback])
+    trainer = L.Trainer(accelerator="gpu", devices=[1], max_epochs=wandb.config["epochs"], logger=wandb_logger, callbacks=[early_stopping_callback, checkpoint_callback])
     trainer.fit(pipeline, dm)
     print("Best Score", checkpoint_callback.best_model_score)
 
