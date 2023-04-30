@@ -2,6 +2,7 @@
 debug.ipynb
 debug.py
 *.csv
+*.CSV
 *.xlsx
 *.pkl
 logs/
