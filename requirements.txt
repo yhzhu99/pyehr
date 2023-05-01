@@ -1,0 +1,7 @@
+lightning
+wandb
+hydra-core
+torchmetrics
+numpy
+pandas
+scikit-learn
