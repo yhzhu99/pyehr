@@ -293,11 +293,12 @@ class Agent(nn.Module):
         static: Optional[torch.tensor] = None,
         mask: Optional[torch.tensor] = None,
     ) -> torch.tensor:
-        batch_size, time_steps, _ = x.size()
-        out = torch.zeros((batch_size, time_steps, self.hidden_dim))
-        for cur_time in range(time_steps):
-            cur_x = x[:, :cur_time+1, :]
-            cur_mask = mask[:, :cur_time+1]
-            cur_out, _ = self.agent_encoder(cur_x, static, cur_mask)
-            out[:, cur_time, :] = cur_out
+        # batch_size, time_steps, _ = x.size()
+        # out = torch.zeros((batch_size, time_steps, self.hidden_dim))
+        # for cur_time in range(time_steps):
+        #     cur_x = x[:, :cur_time+1, :]
+        #     cur_mask = mask[:, :cur_time+1]
+        #     cur_out, _ = self.agent_encoder(cur_x, static, cur_mask)
+        #     out[:, cur_time, :] = cur_out
+        _, out = self.agent_encoder(x, static, mask)
         return out
