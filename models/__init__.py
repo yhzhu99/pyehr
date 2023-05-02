@@ -1,5 +1,6 @@
 from .adacare import AdaCare
 from .agent import Agent
+from .catboost import CatBoost  # ML model
 from .concare import ConCare
 from .grasp import GRASP
 from .gru import GRU
