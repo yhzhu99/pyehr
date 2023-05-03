@@ -27,7 +27,7 @@ sweep_configuration = {
     {
         'task': {'values': ['outcome', 'los']},
         'dataset': {'values': ['tjh', 'cdsl']},
-        'model': {'values': ['CatBoost']},
+        'model': {'values': ['CatBoost', 'RF', 'XGBoost', 'GBDT', 'DT']},
         'learning_rate': {'values': [0.01, 0.1, 1.0]},
         'n_estimators': {'values': [10, 50, 100]},
         'max_depth': {'values': [5, 10, 20]},
