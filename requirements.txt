@@ -5,3 +5,5 @@ torchmetrics
 numpy
 pandas
 scikit-learn
+catboost
+xgboost

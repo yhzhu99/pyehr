@@ -1,24 +1,21 @@
-from catboost import CatBoostClassifier, CatBoostRegressor
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 
-class CatBoost():
+class DT():
     def __init__(self, **params):
         """params is a dict
         seed: int, random seed
         n_estimators: int, number of trees
-        learning_rate: float, learning rate
         max_depth: int, depth of trees
         """
         task = params['task']
         self.task = task
         seed = params['seed']
-        n_estimators = params['n_estimators']
-        learning_rate = params['learning_rate']
         max_depth = params['max_depth']
         if task == "outcome":
-            self.model = CatBoostClassifier(random_state=seed, n_estimators=n_estimators, learning_rate=learning_rate, max_depth=max_depth, verbose=None, silent=True, allow_writing_files=False, loss_function="CrossEntropy")
+            self.model = DecisionTreeClassifier(random_state=seed, max_depth=max_depth)
         elif task == "los":
-            self.model = CatBoostRegressor(random_state=seed, n_estimators=n_estimators, learning_rate=learning_rate, max_depth=max_depth, verbose=None, silent=True, allow_writing_files=False, loss_function="RMSE")
+            self.model = DecisionTreeRegressor(random_state=seed,  max_depth=max_depth)
         else:
             raise ValueError("Task must be either 'outcome' or 'los'.")
 
