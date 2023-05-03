@@ -1,5 +1,5 @@
 stage: tune # tune / train (k-fold) / test
-batch_size: 64
+batch_size: 81920 # make sure the default value contains the whole dataset
 epochs: 100
 patience: 10
 learning_rate: 1e-2
