@@ -1,4 +1,6 @@
 import pandas as pd
+import math
+import copy
 
 
 def df_column_switch(df: pd.DataFrame, column1, column2):
@@ -78,13 +80,107 @@ def forward_fill_pipeline(
         all_pid.append(name)
     return all_x, all_y, all_pid
 
+# elements in data are sorted in time ascending order
+
+
+def export_missing_mask_string(data, time):
+    missing_mask_string = []
+
+    # calculate the length of a certain patient
+    data_len = len(data)
+
+    # calculate the non-empty length of a certain patient
+    data_exist_len = calculate_data_existing_length(data)
+
+    # if all existed
+    if data_len == data_exist_len:
+        # missing_array will be all filled with E to represent the existance of data
+        missing_mask_string = ['E' for _ in range(data_len)]
+        return missing_mask_string
+    # if all not existed
+    elif data_exist_len == 0:
+        missing_mask_string = ['D' for _ in range(data_len)]
+        return missing_mask_string
+
+    not_na_pos = 0
+    if pd.isna(data[0]):
+        # find the first non-nan value's position
+        for i in range(data_len):
+            if not pd.isna(data[i]):
+                not_na_pos = i
+                break
+        missing_mask_string = ['D' for _ in range(not_na_pos)]
+
+    # fill element after the first non-nan value
+    not_na_time_pos = not_na_pos
+    for i in range(not_na_pos, data_len):
+        if pd.isna(data[i]):
+            # count the days of filling
+            missing_mask_string.append(
+                float((pd.to_datetime(time[i]) - pd.to_datetime(time[not_na_time_pos])).days))
+        else:
+            missing_mask_string.append('E')
+            not_na_time_pos = i
+    return missing_mask_string
+
+
+def missing_rate_mapping(x, method, b=0.3):
+
+    if method == 'e':
+        return (1 - b) * math.exp(-x/2) + b
+
+    elif method == 'd':
+        return -b * x + b
+
+
+def export_missing_mask_pipeline(
+    df: pd.DataFrame,
+    feature_missing_array: list[float],
+    demographic_features: list[str],
+    labtest_features: list[str]
+):
+    grouped = df.groupby("PatientID")
+    all_missing_mask_string = []
+
+    # get all_missing_mask_string about D E Delta_time
+    for name, group in grouped:
+        # sort every group by time in ascending order
+        sorted_group = group.sort_values(by=["RecordTime"], ascending=True)
+        group_missing_mask_string = []
+
+        for f in demographic_features + labtest_features:
+            missing_mask_string = export_missing_mask_string(
+                sorted_group[f].values, sorted_group['RecordTime'].values)
+            group_missing_mask_string.append(missing_mask_string)
+        all_missing_mask_string.append(group_missing_mask_string)
+
+    # all_missing_mask_string.shape-> group_num, feature_num, visit
+    local_missing_mask_value = copy.deepcopy(all_missing_mask_string)
+    for pid in range(len(all_missing_mask_string)):
+        for feature_id in range(len(all_missing_mask_string[pid])):
+            for visit_id in range(len(all_missing_mask_string[pid][feature_id])):
+                if all_missing_mask_string[pid][feature_id][visit_id] == 'E':
+                    local_missing_mask_value[pid][feature_id][visit_id] = 1
+                elif all_missing_mask_string[pid][feature_id][visit_id] == 'D':
+                    # determined by the missing rate among all patients
+                    local_missing_mask_value[pid][feature_id][visit_id] = missing_rate_mapping(
+                        feature_missing_array[feature_id], 'd')
+                else:
+                    # e decay
+                    local_missing_mask_value[pid][feature_id][visit_id] = missing_rate_mapping(
+                        all_missing_mask_string[pid][feature_id][visit_id], 'e')
+
+    return (all_missing_mask_string, local_missing_mask_value)
+
+
 def normalize_dataframe(train_df, val_df, test_df, normalize_features):
     # Calculate the quantiles
     q_low = train_df[normalize_features].quantile(0.05)
     q_high = train_df[normalize_features].quantile(0.95)
 
     # Filter the DataFrame based on the quantiles
-    filtered_df = train_df[(train_df[normalize_features] > q_low) & (train_df[normalize_features] < q_high)]
+    filtered_df = train_df[(train_df[normalize_features] > q_low) & (
+        train_df[normalize_features] < q_high)]
 
     # Calculate the mean and standard deviation and median of the filtered data, also the default fill value
     train_mean = filtered_df[normalize_features].mean()
@@ -93,11 +189,31 @@ def normalize_dataframe(train_df, val_df, test_df, normalize_features):
     default_fill: pd.DataFrame = (train_median-train_mean)/(train_std+1e-12)
 
     # LOS info
-    los_info = {"los_mean": train_mean["LOS"].item(), "los_std": train_std["LOS"].item(), "los_median": train_median["LOS"].item()}
+    los_info = {"los_mean": train_mean["LOS"].item(
+    ), "los_std": train_std["LOS"].item(), "los_median": train_median["LOS"].item()}
 
     # Z-score normalize the train, val, and test sets with train_mean and train_std
     train_df[normalize_features] = (train_df[normalize_features] - train_mean) / (train_std+1e-12)
     val_df[normalize_features] = (val_df[normalize_features] - train_mean) / (train_std+1e-12)
     test_df[normalize_features] = (test_df[normalize_features] - train_mean) / (train_std+1e-12)
 
-    return train_df, val_df, test_df, default_fill, los_info
+    # outlier processing
+    def process_element(element):
+        if pd.isna(element):
+            return 0
+        elif float(element) > 1e4:
+            return 0
+        else:
+            return element
+        
+    train_df.loc[:, normalize_features] = train_df.loc[:, normalize_features].applymap(process_element)
+    val_df.loc[:, normalize_features] = val_df.loc[:, normalize_features].applymap(process_element)
+    test_df.loc[:, normalize_features] = test_df.loc[:, normalize_features].applymap(process_element)
+
+    return train_df, val_df, test_df, default_fill, los_info, train_mean, train_std
+
+
+def normalize_df_with_statatistics(df, normalize_features, train_mean, train_std):
+    df[normalize_features] = (
+        df[normalize_features] - train_mean) / (train_std+1e-12)
+    return df
