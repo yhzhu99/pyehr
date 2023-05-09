@@ -64,4 +64,4 @@ def run_experiment():
     print("Best Score", checkpoint_callback.best_model_score)
 
 if __name__ == "__main__":
-    wandb.agent(sweep_id, function=run_experiment)
+    wandb.agent(sweep_id, function=run_experiment, project=project_name)
