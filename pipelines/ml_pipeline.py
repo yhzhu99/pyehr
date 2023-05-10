@@ -14,6 +14,7 @@ from models.utils import generate_mask, get_last_visit
 class MlPipeline(L.LightningModule):
     def __init__(self, config):
         super().__init__()
+        self.save_hyperparameters()
         self.task = config["task"]
         self.los_info = config["los_info"]
         self.model_name = config["model"]
