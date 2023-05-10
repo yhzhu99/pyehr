@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import math
 import copy
 
@@ -201,7 +202,7 @@ def normalize_dataframe(train_df, val_df, test_df, normalize_features):
     def process_element(element):
         if pd.isna(element):
             return 0
-        elif float(element) > 1e4:
+        elif np.abs(float(element)) > 1e4:
             return 0
         else:
             return element
