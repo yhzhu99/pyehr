@@ -174,6 +174,15 @@ def export_missing_mask_pipeline(
     return (all_missing_mask_string, local_missing_mask_value)
 
 
+# outlier processing
+def filter_outlier(element):
+    if pd.isna(element):
+        return 0
+    elif np.abs(float(element)) > 1e4:
+        return 0
+    else:
+        return element
+
 def normalize_dataframe(train_df, val_df, test_df, normalize_features):
     # Calculate the quantiles
     q_low = train_df[normalize_features].quantile(0.05)
@@ -197,24 +206,15 @@ def normalize_dataframe(train_df, val_df, test_df, normalize_features):
     train_df[normalize_features] = (train_df[normalize_features] - train_mean) / (train_std+1e-12)
     val_df[normalize_features] = (val_df[normalize_features] - train_mean) / (train_std+1e-12)
     test_df[normalize_features] = (test_df[normalize_features] - train_mean) / (train_std+1e-12)
-
-    # outlier processing
-    def process_element(element):
-        if pd.isna(element):
-            return 0
-        elif np.abs(float(element)) > 1e4:
-            return 0
-        else:
-            return element
         
-    train_df.loc[:, normalize_features] = train_df.loc[:, normalize_features].applymap(process_element)
-    val_df.loc[:, normalize_features] = val_df.loc[:, normalize_features].applymap(process_element)
-    test_df.loc[:, normalize_features] = test_df.loc[:, normalize_features].applymap(process_element)
+    train_df.loc[:, normalize_features] = train_df.loc[:, normalize_features].applymap(filter_outlier)
+    val_df.loc[:, normalize_features] = val_df.loc[:, normalize_features].applymap(filter_outlier)
+    test_df.loc[:, normalize_features] = test_df.loc[:, normalize_features].applymap(filter_outlier)
 
     return train_df, val_df, test_df, default_fill, los_info, train_mean, train_std
 
 
 def normalize_df_with_statatistics(df, normalize_features, train_mean, train_std):
-    df[normalize_features] = (
-        df[normalize_features] - train_mean) / (train_std+1e-12)
+    df[normalize_features] = (df[normalize_features] - train_mean) / (train_std+1e-12)
+    df.loc[:, normalize_features] = df.loc[:, normalize_features].applymap(filter_outlier)
     return df
