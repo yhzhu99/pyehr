@@ -1,5 +1,7 @@
 import os
+from pathlib import Path
 
+import pandas as pd
 import lightning as L
 import torch
 import torch.nn as nn
@@ -24,6 +26,11 @@ class MlPipeline(L.LightningModule):
         model_class = getattr(models, self.model_name)
         self.model = model_class(**config)
 
+        self.test_performance = {}
+        checkpoint_folder = f'logs/train/{config["dataset"]}/{config["task"]}/{config["model"]}-fold{config["fold"]}-seed{config["seed"]}/checkpoints/'
+        Path(checkpoint_folder).mkdir(parents=True, exist_ok=True)
+        self.checkpoint_path = os.path.join(checkpoint_folder, 'best.ckpt')
+
     def forward(self, x):
         pass
     def training_step(self, batch, batch_idx):
@@ -41,6 +48,14 @@ class MlPipeline(L.LightningModule):
         if check_metric_is_better(self.cur_best_performance, self.main_metric, main_score, self.task):
             self.cur_best_performance = metrics
             for k, v in metrics.items(): self.log("best_"+k, v)
+            pd.to_pickle(self.model, self.checkpoint_path)
         return main_score
+    def test_step(self, batch, batch_idx):
+        x, y, lens, pid = batch
+        x, y = unpad_batch(x, y, lens)
+        self.model = pd.read_pickle(self.checkpoint_path)
+        y_hat = self.model.predict(x)
+        self.test_performance = get_all_metrics(y_hat, y, self.task, self.los_info)
+        return self.test_performance
     def configure_optimizers(self):
         pass

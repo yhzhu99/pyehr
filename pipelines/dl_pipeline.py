@@ -41,6 +41,8 @@ class DlPipeline(L.LightningModule):
             self.head = models.heads.MultitaskHead(self.hidden_dim, self.output_dim, drop=0.0)
 
         self.validation_step_outputs = []
+        self.test_step_outputs = []
+        self.test_performance = {}
 
     def forward(self, x, lens):
         if self.model_name == "ConCare":
@@ -100,6 +102,20 @@ class DlPipeline(L.LightningModule):
             for k, v in metrics.items(): self.log("best_"+k, v)
         self.validation_step_outputs.clear()
         return main_score
+
+    def test_step(self, batch, batch_idx):
+        x, y, lens, pid = batch
+        loss, y, y_hat = self._get_loss(x, y, lens)
+        outs = {'y_pred': y_hat, 'y_true': y}
+        self.test_step_outputs.append(outs)
+        return loss
+    def on_test_epoch_end(self):
+        y_pred = torch.cat([x['y_pred'] for x in self.test_step_outputs]).detach().cpu()
+        y_true = torch.cat([x['y_true'] for x in self.test_step_outputs]).detach().cpu()
+        self.test_performance = get_all_metrics(y_pred, y_true, self.task, self.los_info)
+        self.test_step_outputs.clear()
+        return self.test_performance
+
     def configure_optimizers(self):
         optimizer = torch.optim.AdamW(self.parameters(), lr=self.learning_rate)
         return optimizer
