@@ -38,9 +38,7 @@ def run_dl_experiment(config):
     # data
     dm = EhrDataModule(f'datasets/{config["dataset"]}/processed/fold_{config["fold"]}', batch_size=config["batch_size"])
     # checkpoint
-    checkpoint_addr = f'logs/train/{config["dataset"]}/{config["task"]}/{config["model"]}-fold{config["fold"]}-seed{config["seed"]}/checkpoints'
-    checkpoint_file = os.listdir(checkpoint_addr)[0]
-    checkpoint_path = os.path.join(checkpoint_addr, checkpoint_file)
+    checkpoint_path = f'logs/train/{config["dataset"]}/{config["task"]}/{config["model"]}-fold{config["fold"]}-seed{config["seed"]}/checkpoints/best.ckpt'
     # train/val/test
     pipeline = DlPipeline(config)
     trainer = L.Trainer(accelerator="cpu", max_epochs=1, logger=False, num_sanity_val_steps=0)
@@ -57,8 +55,8 @@ if __name__ == "__main__":
         print(f"Testing... {i}/{len(best_hparams)}")
         run_func = run_ml_experiment if config["model"] in ["RF", "DT", "GBDT", "XGBoost", "CatBoost"] else run_dl_experiment
         if config["dataset"]=="cdsl":
-            seeds = [0,1,2,3,4]
-            folds = [0]
+            seeds = [0]
+            folds = [0,1,2,3,4,5,6,7,8,9]
         else: # tjh dataset
             seeds = [0]
             folds = [0,1,2,3,4,5,6,7,8,9]
