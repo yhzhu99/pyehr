@@ -57,17 +57,24 @@ def run_dl_experiment(config):
 
     # train/val/test
     pipeline = DlPipeline(config)
-    trainer = L.Trainer(accelerator="gpu", devices=[0], max_epochs=config["epochs"], logger=logger, callbacks=[early_stopping_callback, checkpoint_callback])
+    trainer = L.Trainer(accelerator="gpu", devices=[1], max_epochs=config["epochs"], logger=logger, callbacks=[early_stopping_callback, checkpoint_callback])
     trainer.fit(pipeline, dm)
     perf = pipeline.cur_best_performance
     return perf
 
 if __name__ == "__main__":
-    best_hparams = dl_best_hparams # [TO-SPECIFY]
-    # for i in range(0, len(best_hparams)):
-    for i in range(0, 1):
+    best_hparams = ml_best_hparams # [TO-SPECIFY]
+    # tjh_hparams = []
+    # cdsl_hparams = []
+    # for c in best_hparams:
+    #     if c["dataset"]=="tjh":
+    #         tjh_hparams.append(c)
+    #     else:
+    #         cdsl_hparams.append(c)
+    # best_hparams = tjh_hparams # [TO-SPECIFY]
+    # for i in range(len(best_hparams)//2, len(best_hparams)):
+    for i in range(0, len(best_hparams)):
         config = best_hparams[i]
-        if config["dataset"] == "cdsl": continue
         run_func = run_ml_experiment if config["model"] in ["RF", "DT", "GBDT", "XGBoost", "CatBoost"] else run_dl_experiment
         if config["dataset"]=="cdsl":
             seeds = [0]
