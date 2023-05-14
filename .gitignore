@@ -5,6 +5,7 @@ debug.py
 *.CSV
 *.xlsx
 *.pkl
+*.zip
 logs/
 checkpoints/
 wandb/
