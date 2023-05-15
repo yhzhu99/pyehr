@@ -65,6 +65,11 @@ class DlPipeline(L.LightningModule):
             embedding = self.ehr_encoder(x).to(x.device)
             y_hat = self.head(embedding)
             return y_hat, embedding
+        elif self.model_name in ["MCGRU"]:
+            x_demo, x_lab = x[:, 0, :self.demo_dim], x[:, :, self.demo_dim:]
+            embedding = self.ehr_encoder(x_lab, x_demo).to(x.device)
+            y_hat = self.head(embedding)
+            return y_hat, embedding
 
     def _get_loss(self, x, y, lens):
         if self.model_name == "ConCare":

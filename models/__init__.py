@@ -15,4 +15,5 @@ from .rnn import RNN
 from .stagenet import StageNet
 from .tcn import TCN
 from .transformer import Transformer
+from .mcgru import MCGRU
 from .xgboost import XGBoost  # ML model
