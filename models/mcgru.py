@@ -36,18 +36,3 @@ class MCGRU(nn.Module):
         out = torch.cat([demo.unsqueeze(1).repeat(1, time_steps, 1), out], dim=-1)
         out = self.out_proj(out)
         return out
-
-
-if __name__ == "__main__":
-    demo_dim = 2
-    lab_dim = 73
-    hidden_dim = 32
-    num_tokens = 8
-    time_steps = 10
-    bs = 3
-
-    model = MCGRU(lab_dim=lab_dim, demo_dim=demo_dim, hidden_dim=hidden_dim, num_tokens=num_tokens)
-    x = torch.randn(bs, time_steps, lab_dim)
-    static = torch.randn(bs, demo_dim)
-    out = model(x, static)
-    print(out.shape)
