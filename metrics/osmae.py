@@ -22,6 +22,11 @@ Note: This script does not handle missing values in the inputs. It also does not
 import numpy as np
 
 
+def calculate_outcome_prediction_result(outcome_pred, outcome_true):
+    outcome_pred = 1 if outcome_pred > 0.5 else 0
+    return "true" if outcome_pred == outcome_true else "false"
+
+
 def calculate_epsilon(los_true, threshold, large_los):
     """
     epsilon is the decay term
@@ -41,11 +46,6 @@ def calculate_osmae(los_pred, los_true, large_los, threshold, case="true"):
         return epsilon * (max(0, large_los - los_pred) + max(0, large_los - los_true))
     else:
         raise ValueError("case must be 'true' or 'false'")
-
-
-def calculate_outcome_prediction_result(outcome_pred, outcome_true):
-    outcome_pred = 1 if outcome_pred > 0.5 else 0
-    return "true" if outcome_pred == outcome_true else "false"
 
 
 def osmae_score(
