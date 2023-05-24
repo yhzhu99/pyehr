@@ -88,7 +88,7 @@ def osmae_score(
     result = np.array(metric)
     if verbose:
         print("OSMAE Score:", result)
-    return result.mean(axis=0)
+    return {"osmae": result.mean(axis=0).item()}
 
 if __name__ == "__main__":
     y_true_outcome = np.array([1])
