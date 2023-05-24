@@ -6,7 +6,7 @@ import torch.nn as nn
 
 import models
 from datasets.loader.unpad import unpad_y
-from losses import get_simple_loss
+from losses import get_loss
 from metrics import get_all_metrics, check_metric_is_better
 from models.utils import generate_mask, get_last_visit
 
@@ -26,6 +26,7 @@ class DlPipeline(L.LightningModule):
         self.los_info = config["los_info"]
         self.model_name = config["model"]
         self.main_metric = config["main_metric"]
+        self.time_aware = config.get("time_aware", False)
         self.cur_best_performance = {}
 
         if self.model_name == "StageNet":
@@ -75,12 +76,12 @@ class DlPipeline(L.LightningModule):
         if self.model_name == "ConCare":
             y_hat, embedding, decov_loss = self(x, lens)
             y_hat, y = unpad_y(y_hat, y, lens)
-            loss = get_simple_loss(y_hat, y, self.task)
+            loss = get_loss(y_hat, y, self.task, self.time_aware)
             loss += 10*decov_loss
         else:
             y_hat, embedding = self(x, lens)
             y_hat, y = unpad_y(y_hat, y, lens)
-            loss = get_simple_loss(y_hat, y, self.task)
+            loss = get_loss(y_hat, y, self.task, self.time_aware)
         return loss, y, y_hat
     def training_step(self, batch, batch_idx):
         x, y, lens, pid = batch
