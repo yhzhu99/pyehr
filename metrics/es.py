@@ -49,14 +49,14 @@ def es_score(
         - so we don't need to consider visits_length
     """
     metric = []
-    metric_perfect = []
+    metric_optimal = []
     num_records = len(y_pred_outcome)
     for i in range(num_records):
         cur_outcome_pred = y_pred_outcome[i]
         cur_outcome_true = y_true_outcome[i]
         cur_los_true = y_true_los[i]
         prediction_result = calculate_confusion_matrix_value_result(cur_outcome_pred, cur_outcome_true)
-        prediction_result_perfect = calculate_confusion_matrix_value_result(cur_outcome_true, cur_outcome_true)
+        prediction_result_optimal = calculate_confusion_matrix_value_result(cur_outcome_true, cur_outcome_true)
         metric.append(
             calculate_es(
                 cur_los_true,
@@ -64,18 +64,19 @@ def es_score(
                 case=prediction_result,
             )
         )
-        metric_perfect.append(
+        metric_optimal.append(
             calculate_es(
                 cur_los_true,
                 threshold,
-                case=prediction_result_perfect,
+                case=prediction_result_optimal,
             )
         )
     metric = np.array(metric)
-    metric_perfect = np.array(metric_perfect)
+    metric_optimal = np.array(metric_optimal)
     result = 0.0
-    if metric_perfect.sum() > 0.0:
-        result = metric.sum() / metric_perfect.sum()
+    if metric_optimal.sum() > 0.0:
+        result = metric.sum() / metric_optimal.sum()
+    result = max(result, -1.0)
     if verbose:
         print("ES Score:", result)
     return result
