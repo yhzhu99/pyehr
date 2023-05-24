@@ -87,7 +87,7 @@ def osmae_score(
         )
     result = np.array(metric)
     if verbose:
-        print("Early Prediction Score:", result)
+        print("OSMAE Score:", result)
     return result.mean(axis=0)
 
 if __name__ == "__main__":
