@@ -3,14 +3,10 @@ from pathlib import Path
 
 import pandas as pd
 import lightning as L
-import torch
-import torch.nn as nn
 
 import models
 from datasets.loader.unpad import unpad_batch
-from losses import get_simple_loss
 from metrics import check_metric_is_better, get_all_metrics
-from models.utils import generate_mask, get_last_visit
 
 
 class MlPipeline(L.LightningModule):
