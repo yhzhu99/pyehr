@@ -202,6 +202,14 @@ def normalize_dataframe(train_df, val_df, test_df, normalize_features):
     los_info = {"los_mean": train_mean["LOS"].item(
     ), "los_std": train_std["LOS"].item(), "los_median": train_median["LOS"].item()}
 
+    # Calculate large los and threshold (optional, designed for covid-19 benchmark)
+    los_array = train_df.groupby('PatientID')['LOS'].max().values
+    los_p95 = np.percentile(los_array, 95)
+    los_p5 = np.percentile(los_array, 5)
+    filtered_los = los_array[(los_array >= los_p5) & (los_array <= los_p95)]
+    los_info.update({"large_los": los_p95.item(), "threshold": filtered_los.mean().item()*0.5})
+
+
     # Z-score normalize the train, val, and test sets with train_mean and train_std
     train_df[normalize_features] = (train_df[normalize_features] - train_mean) / (train_std+1e-12)
     val_df[normalize_features] = (val_df[normalize_features] - train_mean) / (train_std+1e-12)
