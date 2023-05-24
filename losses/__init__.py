@@ -15,6 +15,6 @@ def get_loss(y_pred, y_true, task, time_aware=False):
 
     # If use time aware loss:
     if task == "outcome" and time_aware:
-        loss = get_time_aware_loss(y_pred, y_true[:, 0])
+        loss = get_time_aware_loss(y_pred, y_true[:, 0], y_true[:, 1])
 
     return loss
