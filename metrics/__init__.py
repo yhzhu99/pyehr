@@ -1,6 +1,8 @@
 import torch
 
 from .binary_classification_metrics import get_binary_metrics
+from .es import es_score
+from .osmae import osmae_score
 from .regression_metrics import get_regression_metrics
 from .utils import check_metric_is_better
 
@@ -9,6 +11,9 @@ def reverse_los(y, los_info):
     return y * los_info["los_std"] + los_info["los_mean"]
 
 def get_all_metrics(preds, labels, task, los_info):
+    threshold = los_info["threshold"]
+    large_los = los_info["large_los"]
+
     # convert preds and labels to tensor if they are ndarray type
     if isinstance(preds, torch.Tensor) == False:
         preds = torch.tensor(preds)
@@ -16,10 +21,12 @@ def get_all_metrics(preds, labels, task, los_info):
         labels = torch.tensor(labels)
 
     if task == "outcome":
-        return get_binary_metrics(preds, labels[:,0])
+        return get_binary_metrics(preds, labels[:,0]) | es_score(labels[:,0], labels[:,1], preds, threshold)
     elif task == "los":
         return get_regression_metrics(reverse_los(preds, los_info), reverse_los(labels[:,1], los_info))
     elif task == "multitask":
-        return get_binary_metrics(preds[:,0], labels[:,0]) | get_regression_metrics(reverse_los(preds[:,1], los_info), reverse_los(labels[:,1], los_info))
+        y_pred_los = reverse_los(preds[:,1], los_info)
+        y_true_los = reverse_los(labels[:,1], los_info)
+        return get_binary_metrics(preds[:,0], labels[:,0]) | get_regression_metrics(y_pred_los, y_true_los) | osmae_score(labels[:,0], y_true_los, preds[:,0], y_pred_los, large_los, threshold)
     else:
         raise ValueError("Task not supported")
