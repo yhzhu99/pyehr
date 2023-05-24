@@ -21,12 +21,15 @@ def get_all_metrics(preds, labels, task, los_info):
         labels = torch.tensor(labels)
 
     if task == "outcome":
-        return get_binary_metrics(preds, labels[:,0]) | es_score(labels[:,0], labels[:,1], preds, threshold)
+        y_true_los = reverse_los(labels[:,1], los_info)
+        return get_binary_metrics(preds, labels[:,0]) | es_score(labels[:,0], y_true_los, preds, threshold)
     elif task == "los":
-        return get_regression_metrics(reverse_los(preds, los_info), reverse_los(labels[:,1], los_info))
+        y_pred_los = reverse_los(preds, los_info)
+        y_true_los = reverse_los(labels[:,1], los_info)
+        return get_regression_metrics(y_pred_los, y_true_los)
     elif task == "multitask":
         y_pred_los = reverse_los(preds[:,1], los_info)
         y_true_los = reverse_los(labels[:,1], los_info)
-        return get_binary_metrics(preds[:,0], labels[:,0]) | get_regression_metrics(y_pred_los, y_true_los) | osmae_score(labels[:,0], y_true_los, preds[:,0], y_pred_los, large_los, threshold)
+        return get_binary_metrics(preds[:,0], labels[:,0]) | get_regression_metrics(y_pred_los, y_true_los) | osmae_score(labels[:,0], y_true_los, preds[:,0], y_pred_los, large_los, threshold) | es_score(labels[:,0], y_true_los, preds[:,0], threshold)
     else:
         raise ValueError("Task not supported")
