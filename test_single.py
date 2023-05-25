@@ -47,9 +47,9 @@ def run_dl_experiment(config):
     return perf
 
 if __name__ == "__main__":
-    performance_table = {'dataset':[], 'task': [], 'model': [], 'fold': [], 'seed': [], 'accuracy': [], 'auroc': [], 'auprc': [], 'mae': [], 'mse': [], 'rmse': [], 'r2': []}
+    performance_table = {'dataset':[], 'task': [], 'model': [], 'fold': [], 'seed': [], 'accuracy': [], 'auroc': [], 'auprc': [], 'es': [], 'mae': [], 'mse': [], 'rmse': [], 'r2': [], 'osmae': []}
     config = {'model': 'MCGRU',
-                'dataset': 'cdsl',
+                'dataset': 'tjh',
                 'task': 'outcome',
                 'epochs': 100,
                 'patience': 10,
@@ -57,9 +57,11 @@ if __name__ == "__main__":
                 'learning_rate': 0.001,
                 'main_metric': 'auprc',
                 'demo_dim': 2,
-                'lab_dim': 97,
+                'lab_dim': 73,
                 'hidden_dim': 64,
-                'output_dim': 1}
+                'output_dim': 1,
+                "time_aware": False,
+            }
     run_func = run_ml_experiment if config["model"] in ["RF", "DT", "GBDT", "XGBoost", "CatBoost"] else run_dl_experiment
     if config["dataset"]=="cdsl":
         seeds = [0]
@@ -82,6 +84,7 @@ if __name__ == "__main__":
                 performance_table['accuracy'].append(perf['accuracy'])
                 performance_table['auroc'].append(perf['auroc'])
                 performance_table['auprc'].append(perf['auprc'])
+                performance_table['es'].append(perf['es'])
                 performance_table['mae'].append(None)
                 performance_table['mse'].append(None)
                 performance_table['rmse'].append(None)
@@ -90,6 +93,7 @@ if __name__ == "__main__":
                 performance_table['accuracy'].append(None)
                 performance_table['auroc'].append(None)
                 performance_table['auprc'].append(None)
+                performance_table['es'].append(None)
                 performance_table['mae'].append(perf['mae'])
                 performance_table['mse'].append(perf['mse'])
                 performance_table['rmse'].append(perf['rmse'])
@@ -98,8 +102,9 @@ if __name__ == "__main__":
                 performance_table['accuracy'].append(perf['accuracy'])
                 performance_table['auroc'].append(perf['auroc'])
                 performance_table['auprc'].append(perf['auprc'])
+                performance_table['es'].append(perf['es'])
                 performance_table['mae'].append(perf['mae'])
                 performance_table['mse'].append(perf['mse'])
                 performance_table['rmse'].append(perf['rmse'])
                 performance_table['r2'].append(perf['r2'])
-    pd.DataFrame(performance_table).to_csv('performance_mcgru_outcome_base.csv', index=False) # [TO-SPECIFY]
+    pd.DataFrame(performance_table).to_csv('mcgru_base_tjh.csv', index=False) # [TO-SPECIFY]

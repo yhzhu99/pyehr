@@ -48,7 +48,7 @@ def run_dl_experiment(config):
 
 if __name__ == "__main__":
     best_hparams = dl_best_hparams # [TO-SPECIFY]
-    performance_table = {'dataset':[], 'task': [], 'model': [], 'fold': [], 'seed': [], 'accuracy': [], 'auroc': [], 'auprc': [], 'mae': [], 'mse': [], 'rmse': [], 'r2': []}
+    performance_table = {'dataset':[], 'task': [], 'model': [], 'fold': [], 'seed': [], 'accuracy': [], 'auroc': [], 'auprc': [], 'es': [], 'mae': [], 'mse': [], 'rmse': [], 'r2': [], 'osmae': []}
     for i in range(0, len(best_hparams)):
     # for i in range(0, 1):
         config = best_hparams[i]
@@ -75,24 +75,30 @@ if __name__ == "__main__":
                     performance_table['accuracy'].append(perf['accuracy'])
                     performance_table['auroc'].append(perf['auroc'])
                     performance_table['auprc'].append(perf['auprc'])
+                    performance_table['es'].append(perf['es'])
                     performance_table['mae'].append(None)
                     performance_table['mse'].append(None)
                     performance_table['rmse'].append(None)
                     performance_table['r2'].append(None)
+                    performance_table['osmae'].append(None)
                 elif config['task'] == 'los':
                     performance_table['accuracy'].append(None)
                     performance_table['auroc'].append(None)
                     performance_table['auprc'].append(None)
+                    performance_table['es'].append(None)
                     performance_table['mae'].append(perf['mae'])
                     performance_table['mse'].append(perf['mse'])
                     performance_table['rmse'].append(perf['rmse'])
                     performance_table['r2'].append(perf['r2'])
+                    performance_table['osmae'].append(None)
                 else:
                     performance_table['accuracy'].append(perf['accuracy'])
                     performance_table['auroc'].append(perf['auroc'])
                     performance_table['auprc'].append(perf['auprc'])
+                    performance_table['es'].append(perf['es'])
                     performance_table['mae'].append(perf['mae'])
                     performance_table['mse'].append(perf['mse'])
                     performance_table['rmse'].append(perf['rmse'])
                     performance_table['r2'].append(perf['r2'])
-    pd.DataFrame(performance_table).to_csv('a.csv', index=False) # [TO-SPECIFY]
+                    performance_table['osmae'].append(perf['osmae'])
+    pd.DataFrame(performance_table).to_csv('perf_dl.csv', index=False) # [TO-SPECIFY]
