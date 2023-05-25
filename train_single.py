@@ -65,7 +65,7 @@ def run_dl_experiment(config):
 if __name__ == "__main__":
 
     config = {'model': 'MCGRU',
-                'dataset': 'cdsl',
+                'dataset': 'tjh',
                 'task': 'outcome',
                 'epochs': 100,
                 'patience': 10,
@@ -73,17 +73,20 @@ if __name__ == "__main__":
                 'learning_rate': 0.001,
                 'main_metric': 'auprc',
                 'demo_dim': 2,
-                'lab_dim': 97,
+                'lab_dim': 73,
                 'hidden_dim': 64,
-                'output_dim': 1}
+                'output_dim': 1,
+                "time_aware": False,
+            }
     run_func = run_ml_experiment if config["model"] in ["RF", "DT", "GBDT", "XGBoost", "CatBoost"] else run_dl_experiment
     if config["dataset"]=="cdsl":
         seeds = [0]
-        folds = [0]
+        folds = [0,1,2,3,4,5,6,7,8,9]
+        # folds = [0]
     else: # tjh dataset
         seeds = [0]
-        # folds = [0,1,2,3,4,5,6,7,8,9]
-        folds = [0]
+        folds = [0,1,2,3,4,5,6,7,8,9]
+        # folds = [0]
     for fold in folds:
         config["fold"] = fold
         for seed in seeds:

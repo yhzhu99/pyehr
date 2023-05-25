@@ -14,6 +14,7 @@ from datasets.loader.load_los_info import get_los_info
 from pipelines import DlPipeline, MlPipeline
 from configs.dl import dl_best_hparams
 from configs.ml import ml_best_hparams
+from configs.experiments import experiments_configs
 
 project_name = "pyehr"
 
@@ -43,6 +44,8 @@ def run_dl_experiment(config):
     dm = EhrDataModule(f'datasets/{config["dataset"]}/processed/fold_{config["fold"]}', batch_size=config["batch_size"])
     # logger
     checkpoint_filename = f'{config["model"]}-fold{config["fold"]}-seed{config["seed"]}'
+    if "time_aware" in config and config["time_aware"] == True:
+        checkpoint_filename+="-ta" # time-aware loss applied
     logger = CSVLogger(save_dir="logs", name=f'train/{config["dataset"]}/{config["task"]}', version=checkpoint_filename)
 
     # EarlyStop and checkpoint callback
@@ -63,7 +66,7 @@ def run_dl_experiment(config):
     return perf
 
 if __name__ == "__main__":
-    best_hparams = ml_best_hparams # [TO-SPECIFY]
+    best_hparams = experiments_configs # [TO-SPECIFY]
     # tjh_hparams = []
     # cdsl_hparams = []
     # for c in best_hparams:
@@ -73,7 +76,7 @@ if __name__ == "__main__":
     #         cdsl_hparams.append(c)
     # best_hparams = tjh_hparams # [TO-SPECIFY]
     # for i in range(len(best_hparams)//2, len(best_hparams)):
-    for i in range(0, len(best_hparams)):
+    for i in range(len(best_hparams)//2 *1, len(best_hparams)//2 *2):
         config = best_hparams[i]
         run_func = run_ml_experiment if config["model"] in ["RF", "DT", "GBDT", "XGBoost", "CatBoost"] else run_dl_experiment
         if config["dataset"]=="cdsl":

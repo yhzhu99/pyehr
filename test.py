@@ -16,6 +16,7 @@ from datasets.loader.load_los_info import get_los_info
 from pipelines import DlPipeline, MlPipeline
 from configs.dl import dl_best_hparams
 from configs.ml import ml_best_hparams
+from configs.experiments import experiments_configs
 
 project_name = "pyehr"
 
@@ -39,6 +40,8 @@ def run_dl_experiment(config):
     dm = EhrDataModule(f'datasets/{config["dataset"]}/processed/fold_{config["fold"]}', batch_size=config["batch_size"])
     # checkpoint
     checkpoint_path = f'logs/train/{config["dataset"]}/{config["task"]}/{config["model"]}-fold{config["fold"]}-seed{config["seed"]}/checkpoints/best.ckpt'
+    if "time_aware" in config and config["time_aware"] == True:
+        checkpoint_path = f'logs/train/{config["dataset"]}/{config["task"]}/{config["model"]}-fold{config["fold"]}-seed{config["seed"]}-ta/checkpoints/best.ckpt' # time-aware loss applied
     # train/val/test
     pipeline = DlPipeline(config)
     trainer = L.Trainer(accelerator="cpu", max_epochs=1, logger=False, num_sanity_val_steps=0)
@@ -47,7 +50,7 @@ def run_dl_experiment(config):
     return perf
 
 if __name__ == "__main__":
-    best_hparams = dl_best_hparams # [TO-SPECIFY]
+    best_hparams = experiments_configs # [TO-SPECIFY]
     performance_table = {'dataset':[], 'task': [], 'model': [], 'fold': [], 'seed': [], 'accuracy': [], 'auroc': [], 'auprc': [], 'es': [], 'mae': [], 'mse': [], 'rmse': [], 'r2': [], 'osmae': []}
     for i in range(0, len(best_hparams)):
     # for i in range(0, 1):
@@ -66,9 +69,15 @@ if __name__ == "__main__":
                 config["seed"] = seed
                 perf = run_func(config)
                 print(f"{config}, Test Performance: {perf}")
+
+                if "time_aware" in config and config["time_aware"] == True:
+                    model_name = config['model']+"-ta"
+                else:
+                    model_name = config['model']
+
                 performance_table['dataset'].append(config['dataset'])
                 performance_table['task'].append(config['task'])
-                performance_table['model'].append(config['model'])
+                performance_table['model'].append(model_name)
                 performance_table['fold'].append(config['fold'])
                 performance_table['seed'].append(config['seed'])
                 if config['task'] == 'outcome':
@@ -101,4 +110,4 @@ if __name__ == "__main__":
                     performance_table['rmse'].append(perf['rmse'])
                     performance_table['r2'].append(perf['r2'])
                     performance_table['osmae'].append(perf['osmae'])
-    pd.DataFrame(performance_table).to_csv('perf_dl.csv', index=False) # [TO-SPECIFY]
+    pd.DataFrame(performance_table).to_csv('perf_experiments.csv', index=False) # [TO-SPECIFY]
