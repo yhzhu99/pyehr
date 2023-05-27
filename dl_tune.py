@@ -48,7 +48,7 @@ def run_experiment():
     run = wandb.init(project=project_name, config=cfg)
     wandb_logger = WandbLogger(project=project_name, log_model=True) # log only the last (best) checkpoint
     config = wandb.config
-    config.update(dataset_config[config['dataset']])
+    config.update(dataset_config[config['dataset']], allow_val_change=True)
     los_config = get_los_info(f'datasets/{config["dataset"]}/processed/fold_{config["fold"]}')
     main_metric = "mae" if config["task"] == "los" else "auprc"
     config.update({"los_info": los_config, "main_metric": main_metric})
