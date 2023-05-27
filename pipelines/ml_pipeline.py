@@ -23,6 +23,7 @@ class MlPipeline(L.LightningModule):
         self.model = model_class(**config)
 
         self.test_performance = {}
+        self.test_outputs = {}
         checkpoint_folder = f'logs/train/{config["dataset"]}/{config["task"]}/{config["model"]}-fold{config["fold"]}-seed{config["seed"]}/checkpoints/'
         Path(checkpoint_folder).mkdir(parents=True, exist_ok=True)
         self.checkpoint_path = os.path.join(checkpoint_folder, 'best.ckpt')
@@ -52,6 +53,7 @@ class MlPipeline(L.LightningModule):
         self.model = pd.read_pickle(self.checkpoint_path)
         y_hat = self.model.predict(x)
         self.test_performance = get_all_metrics(y_hat, y, self.task, self.los_info)
+        self.test_outputs = {'preds': y_hat, 'labels': y}
         return self.test_performance
     def configure_optimizers(self):
         pass

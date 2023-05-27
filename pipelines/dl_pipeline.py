@@ -44,6 +44,7 @@ class DlPipeline(L.LightningModule):
         self.validation_step_outputs = []
         self.test_step_outputs = []
         self.test_performance = {}
+        self.test_outputs = {}
 
     def forward(self, x, lens):
         if self.model_name == "ConCare":
@@ -119,6 +120,7 @@ class DlPipeline(L.LightningModule):
         y_pred = torch.cat([x['y_pred'] for x in self.test_step_outputs]).detach().cpu()
         y_true = torch.cat([x['y_true'] for x in self.test_step_outputs]).detach().cpu()
         self.test_performance = get_all_metrics(y_pred, y_true, self.task, self.los_info)
+        self.test_outputs = {'preds': y_pred, 'labels': y_true}
         self.test_step_outputs.clear()
         return self.test_performance
 
