@@ -7,7 +7,7 @@ from .time_aware_loss import get_time_aware_loss
 
 def get_loss(y_pred, y_true, task, time_aware=False):
     if task == "outcome":
-        loss = F.binary_cross_entropy_with_logits(y_pred, y_true[:, 0])
+        loss = F.binary_cross_entropy(y_pred, y_true[:, 0])
     elif task == "los":
         loss = F.mse_loss(y_pred, y_true[:, 1])
     elif task == "multitask":
