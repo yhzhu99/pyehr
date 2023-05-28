@@ -43,15 +43,15 @@ def run_dl_experiment(config):
     dm = EhrDataModule(f'datasets/{config["dataset"]}/processed/fold_{config["fold"]}', batch_size=config["batch_size"])
     # logger
     checkpoint_filename = f'{config["model"]}-fold{config["fold"]}-seed{config["seed"]}'
-    logger = CSVLogger(save_dir="logs", name=f'train/{config["dataset"]}/{config["task"]}', version=checkpoint_filename)
+    logger = CSVLogger(save_dir="logs", name=f'test/{config["dataset"]}/{config["task"]}', version=checkpoint_filename)
 
     # EarlyStop and checkpoint callback
     if config["task"] in ["outcome", "multitask"]:
         early_stopping_callback = EarlyStopping(monitor="auprc", patience=config["patience"], mode="max",)
-        checkpoint_callback = ModelCheckpoint(filename="test", monitor="auprc", mode="max")
+        checkpoint_callback = ModelCheckpoint(filename="best", monitor="auprc", mode="max")
     elif config["task"] == "los":
         early_stopping_callback = EarlyStopping(monitor="mae", patience=config["patience"], mode="min",)
-        checkpoint_callback = ModelCheckpoint(filename="test", monitor="mae", mode="min")
+        checkpoint_callback = ModelCheckpoint(filename="best", monitor="mae", mode="min")
 
     L.seed_everything(config["seed"]) # seed for reproducibility
 
@@ -64,9 +64,9 @@ def run_dl_experiment(config):
 
 if __name__ == "__main__":
 
-    config = {'model': 'MCGRU',
+    config =  {'model': 'Transformer',
                 'dataset': 'tjh',
-                'task': 'outcome',
+                'task': 'multitask',
                 'epochs': 100,
                 'patience': 10,
                 'batch_size': 64,
@@ -74,10 +74,8 @@ if __name__ == "__main__":
                 'main_metric': 'auprc',
                 'demo_dim': 2,
                 'lab_dim': 73,
-                'hidden_dim': 64,
-                'output_dim': 1,
-                "time_aware": False,
-            }
+                'hidden_dim': 32,
+                'output_dim': 1}
     run_func = run_ml_experiment if config["model"] in ["RF", "DT", "GBDT", "XGBoost", "CatBoost"] else run_dl_experiment
     if config["dataset"]=="cdsl":
         seeds = [0]
