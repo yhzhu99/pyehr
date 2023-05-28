@@ -38,7 +38,7 @@ def run_dl_experiment(config):
     # data
     dm = EhrDataModule(f'datasets/{config["dataset"]}/processed/fold_{config["fold"]}', batch_size=config["batch_size"])
     # checkpoint
-    checkpoint_path = f'logs/train/{config["dataset"]}/{config["task"]}/{config["model"]}-fold{config["fold"]}-seed{config["seed"]}/checkpoints/test.ckpt'
+    checkpoint_path = f'logs/test/{config["dataset"]}/{config["task"]}/{config["model"]}-fold{config["fold"]}-seed{config["seed"]}/checkpoints/best.ckpt'
     # train/val/test
     pipeline = DlPipeline(config)
     trainer = L.Trainer(accelerator="cpu", max_epochs=1, logger=False, num_sanity_val_steps=0)
@@ -48,9 +48,9 @@ def run_dl_experiment(config):
 
 if __name__ == "__main__":
     performance_table = {'dataset':[], 'task': [], 'model': [], 'fold': [], 'seed': [], 'accuracy': [], 'auroc': [], 'auprc': [], 'es': [], 'mae': [], 'mse': [], 'rmse': [], 'r2': [], 'osmae': []}
-    config = {'model': 'MCGRU',
+    config = {'model': 'Transformer',
                 'dataset': 'tjh',
-                'task': 'outcome',
+                'task': 'multitask',
                 'epochs': 100,
                 'patience': 10,
                 'batch_size': 64,
@@ -58,10 +58,8 @@ if __name__ == "__main__":
                 'main_metric': 'auprc',
                 'demo_dim': 2,
                 'lab_dim': 73,
-                'hidden_dim': 64,
-                'output_dim': 1,
-                "time_aware": False,
-            }
+                'hidden_dim': 32,
+                'output_dim': 1}
     run_func = run_ml_experiment if config["model"] in ["RF", "DT", "GBDT", "XGBoost", "CatBoost"] else run_dl_experiment
     if config["dataset"]=="cdsl":
         seeds = [0]
@@ -89,6 +87,7 @@ if __name__ == "__main__":
                 performance_table['mse'].append(None)
                 performance_table['rmse'].append(None)
                 performance_table['r2'].append(None)
+                performance_table['osmae'].append(None)
             elif config['task'] == 'los':
                 performance_table['accuracy'].append(None)
                 performance_table['auroc'].append(None)
@@ -98,6 +97,7 @@ if __name__ == "__main__":
                 performance_table['mse'].append(perf['mse'])
                 performance_table['rmse'].append(perf['rmse'])
                 performance_table['r2'].append(perf['r2'])
+                performance_table['osmae'].append(None)
             else:
                 performance_table['accuracy'].append(perf['accuracy'])
                 performance_table['auroc'].append(perf['auroc'])
@@ -107,4 +107,5 @@ if __name__ == "__main__":
                 performance_table['mse'].append(perf['mse'])
                 performance_table['rmse'].append(perf['rmse'])
                 performance_table['r2'].append(perf['r2'])
-    pd.DataFrame(performance_table).to_csv('mcgru_base_tjh.csv', index=False) # [TO-SPECIFY]
+                performance_table['osmae'].append(perf['osmae'])
+    pd.DataFrame(performance_table).to_csv('transformer_tjh_multitask.csv', index=False) # [TO-SPECIFY]
