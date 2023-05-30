@@ -79,7 +79,9 @@ def es_score(
     result = max(result, -1.0)
     if verbose:
         print("ES Score:", result)
-    return {"es": result.item()}
+    if isinstance(result, np.float64):
+        result = result.item()
+    return {"es": result}
 
 if __name__ == "__main__":
     y_true_outcome = np.array([0,1])
