@@ -1,6 +1,5 @@
 import torch
 from torch import nn
-import einops
 
 class MCGRU(nn.Module):
     def __init__(self, lab_dim, demo_dim, hidden_dim: int=32, feat_dim: int=8, act_layer=nn.GELU, drop=0.0, **kwargs):
