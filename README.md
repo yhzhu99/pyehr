@@ -1,6 +1,6 @@
 # pyehr - A Benchmark in COVID-19 Predictive Modeling Using EHR Data
 
-The repository is a practical implementation of the arXiv paper: ["A Comprehensive Benchmark for COVID-19 Predictive Modeling Using Electronic Health Records in Intensive Care"](https://doi.org/10.48550/arxiv.2209.07805) authored by Junyi Gao*, Yinghao Zhu*, Wenqing Wang*, Yasha Wang, Wen Tang, and Liantao Ma.
+The repository is a practical implementation of the arXiv paper: ["A Comprehensive Benchmark for COVID-19 Predictive Modeling Using Electronic Health Records in Intensive Care"](https://doi.org/10.48550/arxiv.2209.07805) authored by Junyi Gao*, Yinghao Zhu*, Wenqing Wang*, Yasha Wang, Wen Tang, Ewen M. Harrison, and Liantao Ma.
 *\*Equal contribution*
 
 The repository includes various machine learning and deep learning models implemented for predictive modeling tasks using Electronic Health Records (EHR) specifically for COVID-19 patients in Intensive Care Units (ICU).
