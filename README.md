@@ -118,14 +118,12 @@ This project is brought to you by the following contributors:
 For a deeper dive into our research, please refer to our [paper](https://doi.org/10.48550/arxiv.2209.07805).
 
 ```
-@misc{https://doi.org/10.48550/arxiv.2209.07805,
-  doi = {10.48550/ARXIV.2209.07805},
-  url = {https://arxiv.org/abs/2209.07805},
-  author = {Gao, Junyi and Zhu, Yinghao and Wang, Wenqing and Wang, Yasha and Tang, Wen and Ma, Liantao},
-  keywords = {Machine Learning (cs.LG), FOS: Computer and information sciences, FOS: Computer and information sciences},
-  title = {A Comprehensive Benchmark for COVID-19 Predictive Modeling Using Electronic Health Records in Intensive Care: Choosing the Best Model for COVID-19 Prognosis},
-  publisher = {arXiv},
-  year = {2022},
-  copyright = {arXiv.org perpetual, non-exclusive license}
+@misc{gao2023comprehensive,
+      title={A Comprehensive Benchmark for COVID-19 Predictive Modeling Using Electronic Health Records in Intensive Care}, 
+      author={Junyi Gao and Yinghao Zhu and Wenqing Wang and Yasha Wang and Wen Tang and Ewen M. Harrison and Liantao Ma},
+      year={2023},
+      eprint={2209.07805},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG}
 }
 ```
