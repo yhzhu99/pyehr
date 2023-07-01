@@ -1,20 +1,14 @@
-import random
-from pathlib import Path
-
-import hydra
 import lightning as L
 from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint
 from lightning.pytorch.loggers import CSVLogger
-from omegaconf import DictConfig, OmegaConf
-import numpy as np
-from tqdm import tqdm
 
+from configs.dl import dl_best_hparams
+from configs.experiments import experiments_configs
+from configs.ml import ml_best_hparams
 from datasets.loader.datamodule import EhrDataModule
 from datasets.loader.load_los_info import get_los_info
 from pipelines import DlPipeline, MlPipeline
-from configs.dl import dl_best_hparams
-from configs.ml import ml_best_hparams
-from configs.experiments import experiments_configs
+
 
 project_name = "pyehr"
 
@@ -66,17 +60,8 @@ def run_dl_experiment(config):
     return perf
 
 if __name__ == "__main__":
-    best_hparams = experiments_configs # [TO-SPECIFY]
-    # tjh_hparams = []
-    # cdsl_hparams = []
-    # for c in best_hparams:
-    #     if c["dataset"]=="tjh":
-    #         tjh_hparams.append(c)
-    #     else:
-    #         cdsl_hparams.append(c)
-    # best_hparams = tjh_hparams # [TO-SPECIFY]
-    # for i in range(len(best_hparams)//2, len(best_hparams)):
-    for i in range(len(best_hparams)//2 *1, len(best_hparams)//2 *2):
+    best_hparams = dl_configs # [TO-SPECIFY]
+    for i in range(len(best_hparams)):
         config = best_hparams[i]
         run_func = run_ml_experiment if config["model"] in ["RF", "DT", "GBDT", "XGBoost", "CatBoost"] else run_dl_experiment
         if config["dataset"]=="cdsl":

@@ -1,5 +1,3 @@
-import random
-
 import hydra
 import lightning as L
 from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint
