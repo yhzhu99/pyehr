@@ -85,9 +85,9 @@ To get started with the repository, ensure your environment meets the following 
 
 To start with the data pre-precessing steps, follow the instructions:
 
-1. Download TJH dataset from paper [An interpretable mortality prediction model for COVID-19 patients](https://www.nature.com/articles/s42256-020-0180-7), and you need to apply for the CDSL dataset if necessary. [Covid Data Save Lives Dataset](https://www.hmhospitales.com/coronavirus/covid-data-save-lives/english-version)
-2. Run the pre-processing scripts `preprocess_{dataset}.ipynb` in `datasets/` folder.
-3. Then you will have the 10-fold processed datasets in the required data format.
+1. Download TJH dataset from paper [An interpretable mortality prediction model for COVID-19 patients](https://www.nature.com/articles/s42256-020-0180-7), and you need to apply for the CDSL dataset if necessary. [Covid Data Save Lives Dataset](https://www.hmhospitales.com/prensa/notas-de-prensa/comunicado-covid-data-save-lives)
+3. Run the pre-processing scripts `preprocess_{dataset}.ipynb` in `datasets/` folder.
+4. Then you will have the 10-fold processed datasets in the required data format.
 
 To start with the training or testing, use the following commands:
 
