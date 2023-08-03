@@ -111,10 +111,10 @@ def normalize_dataframe(train_df, val_df, test_df, normalize_features):
 
 
     # Z-score normalize the train, val, and test sets with train_mean and train_std
-    train_df[normalize_features] = (train_df[normalize_features] - train_mean) / (train_std+1e-12)
-    val_df[normalize_features] = (val_df[normalize_features] - train_mean) / (train_std+1e-12)
-    test_df[normalize_features] = (test_df[normalize_features] - train_mean) / (train_std+1e-12)
-        
+    train_df.loc[:, normalize_features] = (train_df.loc[:, normalize_features] - train_mean) / (train_std+1e-12)
+    val_df.loc[:, normalize_features] = (val_df.loc[:, normalize_features] - train_mean) / (train_std+1e-12)
+    test_df.loc[:, normalize_features] = (test_df.loc[:, normalize_features] - train_mean) / (train_std+1e-12)
+
     train_df.loc[:, normalize_features] = train_df.loc[:, normalize_features].applymap(filter_outlier)
     val_df.loc[:, normalize_features] = val_df.loc[:, normalize_features].applymap(filter_outlier)
     test_df.loc[:, normalize_features] = test_df.loc[:, normalize_features].applymap(filter_outlier)
@@ -123,6 +123,6 @@ def normalize_dataframe(train_df, val_df, test_df, normalize_features):
 
 
 def normalize_df_with_statistics(df, normalize_features, train_mean, train_std):
-    df[normalize_features] = (df[normalize_features] - train_mean) / (train_std+1e-12)
+    df.loc[:, normalize_features] = (df.loc[:, normalize_features] - train_mean) / (train_std+1e-12)
     df.loc[:, normalize_features] = df.loc[:, normalize_features].applymap(filter_outlier)
     return df
