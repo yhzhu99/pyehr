@@ -1,11 +1,13 @@
-# pyehr - A Benchmark in COVID-19 Predictive Modeling Using EHR Data
+# PyEHR: A Predictive Modeling Toolkit for Electronic Health Records
 
 The repository is a practical implementation of the arXiv paper: ["A Comprehensive Benchmark for COVID-19 Predictive Modeling Using Electronic Health Records in Intensive Care"](https://doi.org/10.48550/arxiv.2209.07805) authored by Junyi Gao*, Yinghao Zhu*, Wenqing Wang*, Yasha Wang, Wen Tang, Ewen M. Harrison, and Liantao Ma.
 *\*Equal contribution*
 
 The repository includes various machine learning and deep learning models implemented for predictive modeling tasks using Electronic Health Records (EHR) specifically for COVID-19 patients in Intensive Care Units (ICU).
 
-Benchmarking results from two real-world COVID-19 EHR datasets (TJH and CDSL datasets) are also provided. All results and trained models are openly available on our online platform https://pyehr.netlify.app for clinicians and researchers.
+Benchmarking results from two real-world COVID-19 EHR datasets (TJH and CDSL datasets) are also provided. All results and trained models are freely accessible on our online platform [PyEHR](https://pyehr.netlify.app), and the source code can be found [here](https://github.com/yhzhu99/pyehr-playground).
+
+We invite clinicians, researchers, and data scientists to contribute to this growing platform.
 
 ## 🎯 Prediction Tasks
 
@@ -51,7 +53,7 @@ The best searched hyperparameters for each model are meticulously preserved in t
 
 The code repository includes the following directory structure:
 
-```
+```bash
 pyehr/
 ├── losses/ # contains losses designed for the tasks
 ├── metrics/ # contains metrics for tasks
@@ -114,6 +116,7 @@ This project is brought to you by the following contributors:
 - [Yinghao Zhu](https://github.com/yhzhu99)
 - [Wenqing Wang](https://github.com/ericaaaaaaaa)
 - [Junyi Gao](https://github.com/v1xerunt)
+- [Liantao Ma](https://github.com/massltime)
 
 For a deeper dive into our research, please refer to our [paper](https://doi.org/10.48550/arxiv.2209.07805).
 
