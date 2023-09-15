@@ -50,4 +50,4 @@ class EhrDataModule(L.LightningDataModule):
         yy = [torch.tensor(y) for y in yy]
         xx_pad = torch.nn.utils.rnn.pad_sequence(xx, batch_first=True, padding_value=0)
         yy_pad = torch.nn.utils.rnn.pad_sequence(yy, batch_first=True, padding_value=0)
-        return xx_pad, yy_pad, lens, pid
+        return xx_pad.float(), yy_pad.float(), lens, pid
