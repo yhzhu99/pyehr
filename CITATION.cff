@@ -1,0 +1,9 @@
+@misc{zhu2023pyehr,
+    author       = {Zhu, Yinghao and Wang, Wenqing and Gao, Junyi and Ma, Liantao},
+    title        = {PyEHR: A Predictive Modeling Toolkit for Electronic Health Records},
+    year         = {2023},
+    publisher    = {GitHub},
+    journal      = {GitHub repository},
+    howpublished = {\url{https://github.com/yhzhu99/pyehr}},
+    commit       = {b2cc7a6c8333a94a7084f42f4620d716003ada8c},
+}
