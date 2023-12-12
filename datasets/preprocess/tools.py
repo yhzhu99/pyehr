@@ -1,7 +1,7 @@
-import pandas as pd
-import numpy as np
 import math
-import copy
+
+import numpy as np
+import pandas as pd
 
 
 def calculate_data_existing_length(data):
@@ -45,6 +45,8 @@ def forward_fill_pipeline(
     default_fill: pd.DataFrame,
     demographic_features: list[str],
     labtest_features: list[str],
+    target_features: list[str],
+    require_impute_features: list[str],
 ):
     grouped = df.groupby("PatientID")
 
@@ -57,13 +59,20 @@ def forward_fill_pipeline(
         patient_x = []
         patient_y = []
 
-        for f in ["Age"] + labtest_features:
-            to_fill_value = default_fill[f]
+        for f in require_impute_features:
+            # if the f is not in the default_fill, then default to -1
+            if f not in default_fill: # these are normally categorical features
+                to_fill_value = -1
+            else:
+                to_fill_value = default_fill[f]
             # take median patient as the default to-fill missing value
             fill_missing_value(sorted_group[f].values, to_fill_value)
 
         for _, v in sorted_group.iterrows():
-            patient_y.append([v["Outcome"], v["LOS"]])
+            target_values = []
+            for f in target_features:
+                target_values.append(v[f])
+            patient_y.append(target_values)
             x = []
             for f in demographic_features + labtest_features:
                 x.append(v[f])
@@ -76,9 +85,7 @@ def forward_fill_pipeline(
 
 # outlier processing
 def filter_outlier(element):
-    if pd.isna(element):
-        return 0
-    elif np.abs(float(element)) > 1e4:
+    if np.abs(float(element)) > 1e4:
         return 0
     else:
         return element
@@ -96,6 +103,12 @@ def normalize_dataframe(train_df, val_df, test_df, normalize_features):
     train_mean = filtered_df[normalize_features].mean()
     train_std = filtered_df[normalize_features].std()
     train_median = filtered_df[normalize_features].median()
+
+    # if certain feature's mean/std/median is NaN, then set it as 0. This feature will be filled with 0 in the following steps
+    train_mean = train_mean.fillna(0)
+    train_std = train_std.fillna(0)
+    train_median = train_median.fillna(0)
+
     default_fill: pd.DataFrame = (train_median-train_mean)/(train_std+1e-12)
 
     # LOS info
@@ -115,14 +128,14 @@ def normalize_dataframe(train_df, val_df, test_df, normalize_features):
     val_df.loc[:, normalize_features] = (val_df.loc[:, normalize_features] - train_mean) / (train_std+1e-12)
     test_df.loc[:, normalize_features] = (test_df.loc[:, normalize_features] - train_mean) / (train_std+1e-12)
 
-    train_df.loc[:, normalize_features] = train_df.loc[:, normalize_features].applymap(filter_outlier)
-    val_df.loc[:, normalize_features] = val_df.loc[:, normalize_features].applymap(filter_outlier)
-    test_df.loc[:, normalize_features] = test_df.loc[:, normalize_features].applymap(filter_outlier)
+    train_df.loc[:, normalize_features] = train_df.loc[:, normalize_features].map(filter_outlier)
+    val_df.loc[:, normalize_features] = val_df.loc[:, normalize_features].map(filter_outlier)
+    test_df.loc[:, normalize_features] = test_df.loc[:, normalize_features].map(filter_outlier)
 
     return train_df, val_df, test_df, default_fill, los_info, train_mean, train_std
 
 
 def normalize_df_with_statistics(df, normalize_features, train_mean, train_std):
     df.loc[:, normalize_features] = (df.loc[:, normalize_features] - train_mean) / (train_std+1e-12)
-    df.loc[:, normalize_features] = df.loc[:, normalize_features].applymap(filter_outlier)
+    df.loc[:, normalize_features] = df.loc[:, normalize_features].map(filter_outlier)
     return df
