@@ -8,3 +8,5 @@ openpyxl
 scikit-learn
 catboost
 xgboost
+seaborn
+matplotlib
