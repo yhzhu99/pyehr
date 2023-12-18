@@ -14,7 +14,7 @@ def calculate_confusion_matrix_value_result(outcome_pred, outcome_true):
     else:
         raise ValueError("Unknown value occurred")
 
-def calculate_es(los_true, threshold, case="tp"):
+def calculate_es(los_true, threshold, case="tp", penalty_term=-0.1):
     metric = 0.0
     if case == "tp":
         if los_true >= threshold:  # predict correct in early stage
@@ -29,7 +29,7 @@ def calculate_es(los_true, threshold, case="tp"):
     elif case == "tn":
         metric = 0.0
     elif case == "fp":
-        metric = -0.1 # penalty term
+        metric = penalty_term # penalty term
     return metric
 
 
