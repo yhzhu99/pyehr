@@ -38,6 +38,7 @@ def es_score(
     y_true_los,
     y_pred_outcome,
     threshold,
+    penalty_term=-0.1,
     verbose=0
 ):
     """
@@ -62,6 +63,7 @@ def es_score(
                 cur_los_true,
                 threshold,
                 case=prediction_result,
+                penalty_term=penalty_term,
             )
         )
         metric_optimal.append(
@@ -69,6 +71,7 @@ def es_score(
                 cur_los_true,
                 threshold,
                 case=prediction_result_optimal,
+                penalty_term=penalty_term,
             )
         )
     metric = np.array(metric)
