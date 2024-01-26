@@ -60,7 +60,7 @@ def run_dl_experiment(config):
     return perf
 
 if __name__ == "__main__":
-    best_hparams = dl_configs # [TO-SPECIFY]
+    best_hparams = dl_best_hparams # [TO-SPECIFY]
     for i in range(len(best_hparams)):
         config = best_hparams[i]
         run_func = run_ml_experiment if config["model"] in ["RF", "DT", "GBDT", "XGBoost", "CatBoost"] else run_dl_experiment
