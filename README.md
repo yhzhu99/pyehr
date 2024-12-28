@@ -1,6 +1,6 @@
 # PyEHR: A Predictive Modeling Toolkit for Electronic Health Records
 
-The repository is a practical implementation of the arXiv paper: ["A Comprehensive Benchmark for COVID-19 Predictive Modeling Using Electronic Health Records in Intensive Care"](https://doi.org/10.48550/arxiv.2209.07805) authored by Junyi Gao*, Yinghao Zhu*, Wenqing Wang*, Yasha Wang, Wen Tang, Ewen M. Harrison, and Liantao Ma.
+The repository is an official implementation of our Cell Patterns paper: ["A Comprehensive Benchmark for COVID-19 Predictive Modeling Using Electronic Health Records in Intensive Care"](https://www.cell.com/patterns/fulltext/S2666-3899(24)00050-3) authored by Junyi Gao*, Yinghao Zhu*, Wenqing Wang*, Yasha Wang, Wen Tang, Ewen M. Harrison, Liantao Ma, etc.
 *\*Equal contribution*
 
 The repository includes various machine learning and deep learning models implemented for predictive modeling tasks using Electronic Health Records (EHR) specifically for COVID-19 patients in Intensive Care Units (ICU).
@@ -121,12 +121,13 @@ This project is brought to you by the following contributors:
 For a deeper dive into our research, please refer to our [paper](https://doi.org/10.48550/arxiv.2209.07805).
 
 ```
-@misc{gao2023comprehensive,
-      title={A Comprehensive Benchmark for COVID-19 Predictive Modeling Using Electronic Health Records in Intensive Care}, 
-      author={Junyi Gao and Yinghao Zhu and Wenqing Wang and Yasha Wang and Wen Tang and Ewen M. Harrison and Liantao Ma},
-      year={2023},
-      eprint={2209.07805},
-      archivePrefix={arXiv},
-      primaryClass={cs.LG}
+@article{gao2024comprehensive,
+  title={A comprehensive benchmark for COVID-19 predictive modeling using electronic health records in intensive care},
+  author={Gao, Junyi and Zhu, Yinghao and Wang, Wenqing and Wang, Zixiang and Dong, Guiying and Tang, Wen and Wang, Hao and Wang, Yasha and Harrison, Ewen M and Ma, Liantao},
+  journal={Patterns},
+  volume={5},
+  number={4},
+  year={2024},
+  publisher={Elsevier}
 }
 ```
