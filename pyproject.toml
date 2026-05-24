@@ -1,0 +1,26 @@
+[project]
+name = "pyehr"
+version = "0.1.0"
+description = "Predictive modeling toolkit for electronic health records."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+license = { file = "LICENSE" }
+dependencies = [
+    "catboost",
+    "hydra-core",
+    "lightning",
+    "matplotlib",
+    "numpy",
+    "omegaconf",
+    "openpyxl",
+    "pandas",
+    "scikit-learn",
+    "seaborn",
+    "torch",
+    "torchmetrics",
+    "wandb",
+    "xgboost",
+]
+
+[tool.uv]
+package = false

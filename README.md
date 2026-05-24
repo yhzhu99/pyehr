@@ -64,7 +64,7 @@ pyehr/
 ├── tune.py # do hyper-parameter search with WandB
 ├── train.py # train models
 ├── test.py # test the models
-└── requirements.txt # code dependencies
+└── pyproject.toml # project dependencies for uv
 ```
 
 ## 🗂️ Data Format
@@ -77,11 +77,11 @@ The inputs fed to the pipelines should have the following data format:
 
 ## ⚙️ Requirements
 
-To get started with the repository, ensure your environment meets the following requirements:
+This project uses [uv](https://docs.astral.sh/uv/) to manage a reproducible Python 3.12 environment.
 
-- Python 3.8+
-- PyTorch 2.0 (use Lightning AI)
-- See `requirements.txt` for additional dependencies.
+```bash
+uv sync
+```
 
 ## 📈 Usage
 
@@ -95,14 +95,14 @@ To start with the training or testing, use the following commands:
 
 ```bash
 # Hyperparameter tuning
-python dl_tune.py # for deep learning models
-python ml_tune.py # for machine learning models
+uv run python dl_tune.py # for deep learning models
+uv run python ml_tune.py # for machine learning models
 
 # Model training
-python train.py
+uv run python train.py
 
 # Model testing
-python test.py
+uv run python test.py
 ```
 
 ## 📜 License
