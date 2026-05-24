@@ -1,7 +1,6 @@
 # PyEHR: A Predictive Modeling Toolkit for Electronic Health Records
 
-This repository is the official implementation of our paper, ["A Comprehensive Benchmark for COVID-19 Predictive Modeling Using Electronic Health Records in Intensive Care"](https://www.cell.com/patterns/fulltext/S2666-3899(24)00050-3), which was accepted by *Patterns*.
-*\*Equal contribution*
+This repository is the official implementation of our paper, ["A Comprehensive Benchmark for COVID-19 Predictive Modeling Using Electronic Health Records in Intensive Care"](https://www.cell.com/patterns/fulltext/S2666-3899(24)00050-3), which was accepted by *Cell Patterns*.
 
 The repository includes various machine learning and deep learning models implemented for predictive modeling tasks using Electronic Health Records (EHR) specifically for COVID-19 patients in Intensive Care Units (ICU).
 
@@ -88,7 +87,7 @@ uv sync
 To start with the data pre-precessing steps, follow the instructions:
 
 1. Download TJH dataset from paper [An interpretable mortality prediction model for COVID-19 patients](https://www.nature.com/articles/s42256-020-0180-7), and you need to apply for the CDSL dataset if necessary. [Covid Data Save Lives Dataset](https://www.hmhospitales.com/prensa/notas-de-prensa/comunicado-covid-data-save-lives)
-3. Run the pre-processing scripts `preprocess_{dataset}.ipynb` in `datasets/` folder.
+3. Run the pre-processing scripts with `uv run python datasets/preprocess_{dataset}.py`.
 4. Then you will have the 10-fold processed datasets in the required data format.
 
 To start with the training or testing, use the following commands:
