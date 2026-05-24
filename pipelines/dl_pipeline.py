@@ -6,7 +6,7 @@ import torch.nn as nn
 
 import models
 from datasets.loader.unpad import unpad_y
-from losses import get_loss
+from losses import MultitaskLoss, TimeAwareLoss, get_loss
 from metrics import get_all_metrics, check_metric_is_better
 from models.utils import generate_mask, get_last_visit
 
@@ -41,6 +41,16 @@ class DlPipeline(L.LightningModule):
             self.head = nn.Sequential(nn.Linear(self.hidden_dim, self.output_dim), nn.Dropout(0.0))
         elif self.task == "multitask":
             self.head = models.heads.MultitaskHead(self.hidden_dim, self.output_dim, drop=0.0)
+
+        if self.task == "multitask":
+            self.criterion = MultitaskLoss(task_num=2)
+        elif self.task == "outcome" and self.time_aware:
+            self.criterion = TimeAwareLoss(
+                los_mean=self.los_info.get("los_mean"),
+                los_std=self.los_info.get("los_std"),
+            )
+        else:
+            self.criterion = None
 
         self.validation_step_outputs = []
         self.test_step_outputs = []
@@ -83,12 +93,12 @@ class DlPipeline(L.LightningModule):
         if self.model_name == "ConCare":
             y_hat, embedding, decov_loss = self(x, lens)
             y_hat, y = unpad_y(y_hat, y, lens)
-            loss = get_loss(y_hat, y, self.task, self.time_aware)
+            loss = get_loss(y_hat, y, self.task, self.time_aware, self.criterion, self.los_info)
             loss += 10*decov_loss
         else:
             y_hat, embedding = self(x, lens)
             y_hat, y = unpad_y(y_hat, y, lens)
-            loss = get_loss(y_hat, y, self.task, self.time_aware)
+            loss = get_loss(y_hat, y, self.task, self.time_aware, self.criterion, self.los_info)
         return loss, y, y_hat, embedding
     def training_step(self, batch, batch_idx):
         x, y, lens, pid = batch
