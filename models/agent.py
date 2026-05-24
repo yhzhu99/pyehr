@@ -32,7 +32,7 @@ class AgentLayer(nn.Module):
         lab_dim: int,
         demo_dim: int = 0,
         cell: str = "gru",
-        use_baseline: bool = True,
+        use_baseline: bool = False,
         n_actions: int = 10,
         n_units: int = 64,
         hidden_dim: int = 128,
@@ -99,8 +99,6 @@ class AgentLayer(nn.Module):
         self.relu = nn.ReLU()
 
     def choose_action(self, observation, agent=1):
-        observation = observation.detach()
-
         if agent == 1:
             result_fc1 = self.agent1_fc1(observation)
             result_fc1 = self.tanh(result_fc1)
@@ -129,7 +127,7 @@ class AgentLayer(nn.Module):
             self.agent2_action.append(actions.unsqueeze(-1))
             self.agent2_prob.append(m.log_prob(actions))
 
-        return actions.unsqueeze(-1)
+        return probs
 
     def forward(
         self,
@@ -219,16 +217,17 @@ class AgentLayer(nn.Module):
                     obs_1 = torch.cat((obs_1, static), dim=1)
                     obs_2 = torch.cat((obs_2, static), dim=1)
 
-                act_idx1 = self.choose_action(obs_1, 1).long()
-                act_idx2 = self.choose_action(obs_2, 2).long()
-                batch_idx = torch.arange(batch_size, dtype=torch.long).unsqueeze(-1)
-                action_h1 = observed_h[act_idx1, batch_idx, :].squeeze(1)
-                action_h2 = observed_h[act_idx2, batch_idx, :].squeeze(1)
+                probs1 = self.choose_action(obs_1, 1)
+                probs2 = self.choose_action(obs_2, 2)
+                history_h = observed_h.permute(1, 0, 2)
+                action_h1 = torch.bmm(probs1.unsqueeze(1), history_h).squeeze(1)
+                action_h2 = torch.bmm(probs2.unsqueeze(1), history_h).squeeze(1)
                 action_h = (action_h1 + action_h2) / 2
                 if self.cell == "lstm":
                     observed_c = torch.cat((observed_c[1:], cur_c.unsqueeze(0)), 0)
-                    action_c1 = observed_c[act_idx1, batch_idx, :].squeeze(1)
-                    action_c2 = observed_c[act_idx2, batch_idx, :].squeeze(1)
+                    history_c = observed_c.permute(1, 0, 2)
+                    action_c1 = torch.bmm(probs1.unsqueeze(1), history_c).squeeze(1)
+                    action_c2 = torch.bmm(probs2.unsqueeze(1), history_c).squeeze(1)
                     action_c = (action_c1 + action_c2) / 2
 
             if self.cell == "lstm":
@@ -260,7 +259,7 @@ class Agent(nn.Module):
         lab_dim: int,
         demo_dim: int = 0,
         cell: str = "gru",
-        use_baseline: bool = True,
+        use_baseline: bool = False,
         n_actions: int = 10,
         n_units: int = 64,
         hidden_dim: int = 128,

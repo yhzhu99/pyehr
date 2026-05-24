@@ -17,8 +17,13 @@ from models.utils import generate_mask, get_last_visit
 def random_init(dataset, num_centers, device):
     num_points = dataset.size(0) # batch_size
     dimension = dataset.size(1) # context_dim
-    indices = torch.tensor(np.array(random.sample(range(num_points), k=num_centers)), dtype=torch.long)
-    centers = torch.gather(dataset, 0, indices.view(-1, 1).expand(-1, dimension).to(device=device))
+    num_centers = min(num_centers, num_points)
+    indices = torch.tensor(
+        np.array(random.sample(range(num_points), k=num_centers)),
+        dtype=torch.long,
+        device=device,
+    )
+    centers = torch.gather(dataset, 0, indices.view(-1, 1).expand(-1, dimension))
     return centers
 
 
@@ -31,7 +36,7 @@ def compute_codes(dataset, centers):
     # 5e8 should vary depending on the free memory on the GPU
     # Ideally, automatically ;)
     chunk_size = int(5e8 / num_centers)
-    codes = torch.zeros(num_points, dtype=torch.long)
+    codes = torch.zeros(num_points, dtype=torch.long, device=dataset.device)
     centers_t = torch.transpose(centers, 0, 1)
     centers_norms = torch.sum(centers**2, dim=1).view(1, -1)
     for i in range(0, num_points, chunk_size):
@@ -52,18 +57,19 @@ def compute_codes(dataset, centers):
 def update_centers(dataset, codes, num_centers, device):
     num_points = dataset.size(0)
     dimension = dataset.size(1)
-    centers = torch.zeros(num_centers, dimension, dtype=torch.float).to(device=device)
-    cnt = torch.zeros(num_centers, dtype=torch.float)
-    centers.scatter_add_(0, codes.view(-1, 1).expand(-1, dimension).to(device=device), dataset)
-    cnt.scatter_add_(0, codes, torch.ones(num_points, dtype=torch.float))
+    centers = torch.zeros(num_centers, dimension, dtype=dataset.dtype, device=device)
+    cnt = torch.zeros(num_centers, dtype=dataset.dtype, device=device)
+    centers.scatter_add_(0, codes.view(-1, 1).expand(-1, dimension), dataset)
+    cnt.scatter_add_(0, codes, torch.ones(num_points, dtype=dataset.dtype, device=device))
     # Avoiding division by zero
     # Not necessary if there are no duplicates among the data points
-    cnt = torch.where(cnt > 0.5, cnt, torch.ones(num_centers, dtype=torch.float))
-    centers /= cnt.view(-1, 1).to(device=device)
+    cnt = torch.where(cnt > 0.5, cnt, torch.ones(num_centers, dtype=dataset.dtype, device=device))
+    centers /= cnt.view(-1, 1)
     return centers
 
 
 def cluster(dataset, num_centers, device):
+    num_centers = min(num_centers, dataset.size(0))
     centers = random_init(dataset, num_centers, device)
     codes = compute_codes(dataset, centers)
     num_iterations = 0
@@ -177,7 +183,7 @@ class GRASPLayer(nn.Module):
         self.bn = nn.BatchNorm1d(self.hidden_dim)
 
     def sample_gumbel(self, shape, eps=1e-20):
-        U = torch.rand(shape)
+        U = torch.rand(shape, device=self.weight1.weight.device)
 
         return -torch.log(-torch.log(U + eps) + eps)
 
@@ -192,9 +198,10 @@ class GRASPLayer(nn.Module):
         return: flatten --> [*, n_class] an one-hot vector
         """
         y = self.gumbel_softmax_sample(logits, temperature, device)
+        cluster_num = logits.size(-1)
 
         if not hard:
-            return y.view(-1, self.cluster_num)
+            return y.view(-1, cluster_num)
 
         shape = y.size()
         _, ind = y.max(dim=-1)
@@ -228,16 +235,24 @@ class GRASPLayer(nn.Module):
             hidden_t, _ = self.backbone(x, mask=mask, static=static)
         else:
             _, hidden_t = self.backbone(x, mask)
-        hidden_t = torch.squeeze(hidden_t, 0)
+        if hidden_t.dim() == 3 and hidden_t.size(0) == 1:
+            hidden_t = hidden_t.squeeze(0)
 
         centers, codes = cluster(hidden_t, self.cluster_num, x.device)
+        cluster_num = centers.size(0)
 
-        if self.A_mat == None:
-            A_mat = np.eye(self.cluster_num)
+        if cluster_num <= 1:
+            A_mat = np.eye(cluster_num)
         else:
-            A_mat = kneighbors_graph(np.array(centers.detach().cpu().numpy()),20,mode="connectivity",include_self=False,).toarray()
+            n_neighbors = min(20, cluster_num - 1)
+            A_mat = kneighbors_graph(
+                np.array(centers.detach().cpu().numpy()),
+                n_neighbors,
+                mode="connectivity",
+                include_self=True,
+            ).toarray()
 
-        adj_mat = torch.tensor(A_mat).to(device=x.device)
+        adj_mat = torch.tensor(A_mat, dtype=x.dtype, device=x.device)
 
         e = self.relu(torch.matmul(hidden_t, centers.transpose(0, 1)))  # b clu_num
 
@@ -287,7 +302,7 @@ class GRASP(nn.Module):
         mask: Optional[torch.tensor] = None,
     ) -> torch.tensor:
         batch_size, time_steps, _ = x.size()
-        out = torch.zeros((batch_size, time_steps, self.hidden_dim))
+        out = x.new_zeros((batch_size, time_steps, self.hidden_dim))
         for cur_time in range(time_steps):
             cur_x = x[:, :cur_time+1, :]
             cur_mask = mask[:, :cur_time+1]

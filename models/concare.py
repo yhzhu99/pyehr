@@ -86,7 +86,7 @@ class FinalAttentionQKV(nn.Module):
             q = torch.reshape(
                 input_q, (batch_size, self.attention_hidden_dim, 1)
             )  # B*h 1
-            e = torch.matmul(input_k, q).squeeze()  # b t
+            e = torch.matmul(input_k, q).squeeze(-1)  # b t
 
         elif self.attention_type == "concat":
             q = input_q.unsqueeze(1).repeat(1, time_step, 1)  # b t h
@@ -106,7 +106,7 @@ class FinalAttentionQKV(nn.Module):
         a = self.softmax(e)  # B*T
         if self.dropout is not None:
             a = self.dropout(a)
-        v = torch.matmul(a.unsqueeze(1), input_v).squeeze()  # B*I
+        v = torch.matmul(a.unsqueeze(1), input_v).squeeze(1)  # B*I
 
         return v, a
 
@@ -177,6 +177,8 @@ class MultiHeadedAttention(nn.Module):
     def cov(self, m, y=None):
         if y is not None:
             m = torch.cat((m, y), dim=0)
+        if m.size(1) <= 1:
+            return m.new_zeros((m.size(0), m.size(0)))
         m_exp = torch.mean(m, dim=1)
         x = m - m_exp[:, None]
         cov = 1 / (x.size(1) - 1) * x.mm(x.t())
@@ -297,7 +299,6 @@ class SingleAttention(nn.Module):
                 )
             )
 
-            nn.init.kaiming_uniform_(self.Wd, a=math.sqrt(5))
             nn.init.kaiming_uniform_(self.Wx, a=math.sqrt(5))
             nn.init.kaiming_uniform_(self.Wt, a=math.sqrt(5))
             nn.init.kaiming_uniform_(self.Wa, a=math.sqrt(5))
@@ -662,8 +663,8 @@ class ConCare(nn.Module):
         """
         # rnn will only apply dropout between layers
         batch_size, time_steps, _ = x.size()
-        out = torch.zeros((batch_size, time_steps, self.hidden_dim))
-        decov_loss = 0
+        out = x.new_zeros((batch_size, time_steps, self.hidden_dim))
+        decov_loss = x.new_tensor(0.0)
         for cur_time in range(time_steps):
             cur_x = x[:, :cur_time+1, :]
             cur_mask = mask[:, :cur_time+1]

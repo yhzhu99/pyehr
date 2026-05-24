@@ -281,7 +281,7 @@ class AdaCare(nn.Module):
         mask: Optional[torch.tensor] = None,
     ):
         batch_size, time_steps, _ = x.size()
-        out = torch.zeros((batch_size, time_steps, self.hidden_dim))
+        out = x.new_zeros((batch_size, time_steps, self.hidden_dim))
         for cur_time in range(time_steps):
             cur_x = x[:, :cur_time+1, :]
             cur_mask = mask[:, :cur_time+1]

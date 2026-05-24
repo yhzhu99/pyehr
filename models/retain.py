@@ -103,12 +103,12 @@ class RETAIN(nn.Module):
         self.input_dim = input_dim
         self.hidden_dim = hidden_dim
         self.dropout = dropout
-        self.retain_layer = RETAINLayer(input_dim, dropout)
+        self.retain_layer = RETAINLayer(input_dim, hidden_dim, dropout)
         self.proj = nn.Linear(input_dim, hidden_dim)
     
     def forward(self, x: torch.tensor, mask: Optional[torch.tensor] = None):
         batch_size, time_steps, _ = x.size()
-        out = torch.zeros((batch_size, time_steps, self.hidden_dim))
+        out = x.new_zeros((batch_size, time_steps, self.hidden_dim))
         for cur_time in range(time_steps):
             cur_x = x[:, :cur_time+1, :]
             cur_mask = mask[:, :cur_time+1]

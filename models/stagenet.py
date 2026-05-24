@@ -156,11 +156,11 @@ class StageNetLayer(nn.Module):
         # rnn will only apply dropout between layers
         batch_size, time_step, feature_dim = x.size()
         device = x.device
-        if time == None:
-            time = torch.ones(batch_size, time_step)
+        if time is None:
+            time = x.new_ones(batch_size, time_step)
         time = time.reshape(batch_size, time_step)
-        c_out = torch.zeros(batch_size, self.hidden_dim)
-        h_out = torch.zeros(batch_size, self.hidden_dim)
+        c_out = x.new_zeros(batch_size, self.hidden_dim)
+        h_out = x.new_zeros(batch_size, self.hidden_dim)
 
         tmp_h = (
             torch.zeros_like(h_out, dtype=torch.float32)
@@ -168,7 +168,7 @@ class StageNetLayer(nn.Module):
             .repeat(self.conv_size)
             .view(self.conv_size, batch_size, self.hidden_dim)
         )
-        tmp_dis = torch.zeros((self.conv_size, batch_size))
+        tmp_dis = x.new_zeros((self.conv_size, batch_size))
         h = []
         origin_h = []
         distance = []
@@ -279,6 +279,6 @@ class StageNet(nn.Module):
         #     cur_out = self.proj(cur_out)
         #     out[:, cur_time, :] = cur_out
         # return out
-        _, out, _ = self.stagenet_layer(x, mask)
+        _, out, _ = self.stagenet_layer(x, mask=mask)
         out = self.proj(out)
         return out
