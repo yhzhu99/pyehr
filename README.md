@@ -1,24 +1,33 @@
-# PyEHR: A Predictive Modeling Toolkit for Electronic Health Records
+# PyEHR: Predictive Modeling Toolkit for Electronic Health Records
 
-This repository is the official implementation of our paper, ["A Comprehensive Benchmark for COVID-19 Predictive Modeling Using Electronic Health Records in Intensive Care"](https://www.cell.com/patterns/fulltext/S2666-3899(24)00050-3), which was accepted by *Cell Patterns*.
+PyEHR is the official implementation of our *Patterns* paper, ["A comprehensive benchmark for COVID-19 predictive modeling using electronic health records in intensive care"](https://www.cell.com/patterns/fulltext/S2666-3899(24)00050-3). It provides reproducible preprocessing, training, tuning, and evaluation pipelines for COVID-19 ICU predictive modeling with EHR data.
 
-The repository includes various machine learning and deep learning models implemented for predictive modeling tasks using Electronic Health Records (EHR) specifically for COVID-19 patients in Intensive Care Units (ICU).
+Benchmarking results from two real-world COVID-19 EHR datasets, TJH and CDSL, are available through the online [PyEHR platform](https://pyehr.netlify.app). The platform source code is maintained separately at [pyehr-playground](https://github.com/yhzhu99/pyehr-playground).
 
-Benchmarking results from two real-world COVID-19 EHR datasets (TJH and CDSL datasets) are also provided. All results and trained models are freely accessible on our online platform [PyEHR](https://pyehr.netlify.app), and the source code can be found [here](https://github.com/yhzhu99/pyehr-playground).
+<p align="center">
+  <img src="docs/assets/pyehr-overview.jpg" alt="PyEHR benchmark overview: EHR data input, standardized processing, model evaluation, benchmark results, online application, and public code." width="720">
+</p>
 
-We invite clinicians, researchers, and data scientists to contribute to this growing platform.
+<p align="center"><em>Overview of the PyEHR benchmark workflow from our Patterns paper.</em></p>
 
-## 🎯 Prediction Tasks
+## Overview
 
-The following prediction tasks have been implemented in this repository:
+This repository contains:
 
-- [x] Mortality outcome prediction (Early)
+- standardized preprocessing scripts for TJH and CDSL EHR datasets;
+- clinically motivated prediction tasks for COVID-19 ICU patients;
+- traditional machine learning, basic deep learning, and EHR-specific predictive models;
+- task-specific losses and evaluation metrics, including time-aware loss, ES, and OSMAE;
+- best searched hyperparameters in `configs/`;
+- training, testing, and W&B-based hyperparameter tuning scripts.
+
+## Prediction Tasks
+
+- [x] Early mortality outcome prediction
 - [x] Length-of-stay prediction
-- [x] Multi-task/Two-stage prediction (predict mortality outcome and length-of-stay simultaneously)
+- [x] Multi-task / two-stage prediction for mortality outcome and length of stay
 
-## 🚀 Model Zoo
-
-The repository contains a variety of models from traditional machine learning, basic deep learning, and advanced deep learning models tailored for EHR data:
+## Model Zoo
 
 ### Machine Learning Models
 
@@ -32,9 +41,9 @@ The repository contains a variety of models from traditional machine learning, b
 
 - [x] Multi-layer perceptron (MLP)
 - [x] Recurrent neural network (RNN)
-- [x] Long-short term memory network (LSTM)
-- [x] Gated recurrent units (GRU)
-- [x] Temporal convolutional networks
+- [x] Long short-term memory network (LSTM)
+- [x] Gated recurrent unit (GRU)
+- [x] Temporal convolutional network (TCN)
 - [x] Transformer
 
 ### EHR Predictive Models
@@ -46,35 +55,34 @@ The repository contains a variety of models from traditional machine learning, b
 - [x] ConCare
 - [x] GRASP
 
-The best searched hyperparameters for each model are meticulously preserved in the configs/ folder (`dl.py` and `ml.py`).
-
-## 🗄️ Repository Structure
-
-The code repository includes the following directory structure:
+## Repository Structure
 
 ```bash
 pyehr/
-├── losses/ # contains losses designed for the tasks
-├── metrics/ # contains metrics for tasks
-├── models/ # backbone models ML or DL models
-├── configs/ # contains configs of best searched hyperparameters and dataset related configs
-├── datasets/ # contains datasets and pre-process scripts
-├── pipelines/ # deep learning or machine learning pipeline under pytorch lightning framework
-├── tune.py # do hyper-parameter search with WandB
-├── train.py # train models
-├── test.py # test the models
-└── pyproject.toml # project dependencies for uv
+├── configs/        # experiment configs and searched hyperparameters
+├── datasets/       # data loaders and TJH/CDSL preprocessing scripts
+├── losses/         # task losses, including multitask and time-aware losses
+├── metrics/        # task metrics, including ES and OSMAE
+├── models/         # ML, DL, and EHR-specific model implementations
+├── pipelines/      # Lightning training pipelines for ML and DL models
+├── docs/assets/    # README and documentation assets
+├── dl_tune.py      # W&B sweeps for deep learning models
+├── ml_tune.py      # W&B sweeps for machine learning models
+├── train.py        # train selected benchmark models
+├── test.py         # test trained models
+├── test_twostage.py
+└── pyproject.toml  # uv-managed Python environment
 ```
 
-## 🗂️ Data Format
+## Data Format
 
-The inputs fed to the pipelines should have the following data format:
+Processed folds should be stored under `datasets/<dataset>/processed/fold_<k>/` and contain:
 
-- `x.pkl`: (N, T, D) List, where N is the number of patients, T is the number of time steps, and D is the number of features. At D dimension, the first x features are demographic features, the next y features are lab test features, where x + y = D
-- `y.pkl`: (N, T, 2) List, where the 2 values are [outcome, length-of-stay] for each time step.
-- `los_info.pkl`: a dictionary contains length-of-stay related statatistics. E.g. mean and std of the los values. Since we have done z-score normalization to the los labels, these stats are essential to reverse the raw los values.
+- `x.pkl`: `(N, T, D)` list, where `N` is the number of patients, `T` is the number of time steps, and `D` is the number of features. The first features are demographic variables and the remaining features are lab tests or vital signs.
+- `y.pkl`: `(N, T, 2)` list, where each target is `[outcome, length_of_stay]`.
+- `los_info.pkl`: length-of-stay statistics, such as mean and standard deviation, used to recover raw LOS values after z-score normalization.
 
-## ⚙️ Requirements
+## Setup
 
 This project uses [uv](https://docs.astral.sh/uv/) to manage a reproducible Python 3.12 environment.
 
@@ -82,44 +90,46 @@ This project uses [uv](https://docs.astral.sh/uv/) to manage a reproducible Pyth
 uv sync
 ```
 
-## 📈 Usage
+## Usage
 
-To start with the data pre-precessing steps, follow the instructions:
+1. Download the TJH dataset from [An interpretable mortality prediction model for COVID-19 patients](https://www.nature.com/articles/s42256-020-0180-7). Apply for access to the [Covid Data Save Lives Dataset](https://www.hmhospitales.com/prensa/notas-de-prensa/comunicado-covid-data-save-lives) if you need CDSL.
+2. Run the preprocessing script for the target dataset:
 
-1. Download TJH dataset from paper [An interpretable mortality prediction model for COVID-19 patients](https://www.nature.com/articles/s42256-020-0180-7), and you need to apply for the CDSL dataset if necessary. [Covid Data Save Lives Dataset](https://www.hmhospitales.com/prensa/notas-de-prensa/comunicado-covid-data-save-lives)
-3. Run the pre-processing scripts with `uv run python datasets/preprocess_{dataset}.py`.
-4. Then you will have the 10-fold processed datasets in the required data format.
+   ```bash
+   uv run python datasets/preprocess_tjh.py
+   uv run python datasets/preprocess_cdsl.py
+   ```
 
-To start with the training or testing, use the following commands:
+3. Run hyperparameter tuning when needed:
 
-```bash
-# Hyperparameter tuning
-uv run python dl_tune.py # for deep learning models
-uv run python ml_tune.py # for machine learning models
+   ```bash
+   uv run python dl_tune.py
+   uv run python ml_tune.py
+   ```
 
-# Model training
-uv run python train.py
+4. Train and test models:
 
-# Model testing
-uv run python test.py
-```
+   ```bash
+   uv run python train.py
+   uv run python test.py
+   ```
 
-## 📜 License
+## License
 
-This project is licensed under the terms of the MIT license. See [LICENSE](LICENSE) for additional details.
+This project is licensed under the MIT license. See [LICENSE](LICENSE) for details.
 
-## 🙏 Contributors
-
-This project is brought to you by the following contributors:
+## Contributors
 
 - [Yinghao Zhu](https://github.com/yhzhu99)
 - [Wenqing Wang](https://github.com/ericaaaaaaaa)
 - [Junyi Gao](https://github.com/v1xerunt)
 - [Liantao Ma](https://github.com/massltime)
 
-For a deeper dive into our research, please refer to our *Patterns* [paper](https://www.cell.com/patterns/fulltext/S2666-3899(24)00050-3).
+## Citation
 
-```
+If this repository is useful for your work, please cite our *Patterns* paper:
+
+```bibtex
 @article{gao2024comprehensive,
   title={A comprehensive benchmark for COVID-19 predictive modeling using electronic health records in intensive care},
   author={Gao, Junyi and Zhu, Yinghao and Wang, Wenqing and Wang, Zixiang and Dong, Guiying and Tang, Wen and Wang, Hao and Wang, Yasha and Harrison, Ewen M and Ma, Liantao},
