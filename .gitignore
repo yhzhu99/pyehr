@@ -11,6 +11,7 @@ checkpoints/
 wandb/
 lightning_logs/
 pyehr
+datasets/cdsl/raw/COVID DATA SAVE LIVES.pdf
 
 #########################################
 
