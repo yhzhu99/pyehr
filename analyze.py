@@ -1,5 +1,6 @@
 import lightning as L
 import pandas as pd
+from pathlib import Path
 
 from configs.dl import dl_best_hparams
 from configs.experiments import experiments_configs
@@ -43,6 +44,7 @@ def run_dl_experiment(config):
 
 if __name__ == "__main__":
     best_hparams = dl_best_hparams # [TO-SPECIFY]
+    Path("logs/analysis").mkdir(parents=True, exist_ok=True)
     performance_table = {'dataset':[], 'task': [], 'model': [], 'fold': [], 'seed': [], 'accuracy': [], 'auroc': [], 'auprc': [], 'es': [], 'mae': [], 'mse': [], 'rmse': [], 'r2': [], 'osmae': []}
     for i in range(0, len(best_hparams)):
     # for i in range(0, 1):
@@ -72,4 +74,3 @@ if __name__ == "__main__":
 
                 save_name = f"{config['dataset']}-{config['task']}-{model_name}-fold{fold}-seed{seed}.pkl"
                 pd.to_pickle(outs, f"logs/analysis/{save_name}")
-

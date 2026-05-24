@@ -109,7 +109,7 @@ class DlPipeline(L.LightningModule):
         x, y, lens, pid = batch
         loss, y, y_hat, _ = self._get_loss(x, y, lens)
         self.log("val_loss", loss)
-        outs = {'y_pred': y_hat, 'y_true': y, 'val_loss': loss}
+        outs = {'y_pred': y_hat.detach(), 'y_true': y.detach(), 'val_loss': loss.detach()}
         self.validation_step_outputs.append(outs)
         return loss
     def on_validation_epoch_end(self):
@@ -129,16 +129,28 @@ class DlPipeline(L.LightningModule):
     def test_step(self, batch, batch_idx):
         x, y, lens, pid = batch
         loss, y, y_hat, embedding = self._get_loss(x, y, lens)
-        outs = {'y_pred': y_hat, 'y_true': y, 'lens': lens, 'pids': pid, 'embeddings': embedding}
+        outs = {
+            'y_pred': y_hat.detach(),
+            'y_true': y.detach(),
+            'lens': lens.detach(),
+            'pids': pid,
+            'embeddings': embedding.detach(),
+        }
         self.test_step_outputs.append(outs)
         return loss
     def on_test_epoch_end(self):
         y_pred = torch.cat([x['y_pred'] for x in self.test_step_outputs]).detach().cpu()
         y_true = torch.cat([x['y_true'] for x in self.test_step_outputs]).detach().cpu()
         lens = torch.cat([x['lens'] for x in self.test_step_outputs]).detach().cpu()
-        embeddings = torch.cat([torch.nn.functional.pad(x['embeddings'], (0, 0, 0, max([y['embeddings'].shape[1] for y in self.test_step_outputs])-x['embeddings'].shape[1], 0, 0)) for x in self.test_step_outputs])
-        pids = []
-        pids.extend([x['pids'] for x in self.test_step_outputs])
+        max_len = max([y['embeddings'].shape[1] for y in self.test_step_outputs])
+        embeddings = torch.cat([
+            torch.nn.functional.pad(
+                x['embeddings'].detach().cpu(),
+                (0, 0, 0, max_len - x['embeddings'].shape[1], 0, 0),
+            )
+            for x in self.test_step_outputs
+        ])
+        pids = [pid for x in self.test_step_outputs for pid in x['pids']]
         self.test_performance = get_all_metrics(y_pred, y_true, self.task, self.los_info)
         self.test_outputs = {'preds': y_pred, 'labels': y_true, 'lens': lens, 'pids': pids, 'embeddings': embeddings}
         self.test_step_outputs.clear()

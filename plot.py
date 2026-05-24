@@ -8,6 +8,7 @@
 
 import numpy as np
 import pandas as pd
+from pathlib import Path
 
 # matplotlib
 import matplotlib.pyplot as plt
@@ -24,6 +25,7 @@ plt.rcParams['legend.facecolor']='white'
 plt.rcParams['legend.edgecolor']='grey'
 plt.rcParams["axes.edgecolor"] = "black"
 plt.rcParams["axes.linewidth"]  = 1
+Path("logs/figures").mkdir(parents=True, exist_ok=True)
 
 # ## Draw OSMAE / ES scores on different thresholds
 
@@ -63,10 +65,10 @@ config.update({"los_info": los_config})
 dm = EhrDataModule(f'datasets/{config["dataset"]}/processed/fold_0', batch_size=config["batch_size"])
 
 # load TCN multitask model
-checkpoint_path = f'logs/test/{config["dataset"]}/{config["task"]}/{config["model"]}-fold0-seed0/checkpoints/best.ckpt'
+checkpoint_path = f'logs/train/{config["dataset"]}/{config["task"]}/{config["model"]}-fold0-seed0/checkpoints/best.ckpt'
 pipeline = DlPipeline(config)
 trainer = L.Trainer(accelerator="cpu", max_epochs=1, logger=False, num_sanity_val_steps=0)
-trainer.test(pipeline, dm)
+trainer.test(pipeline, dm, ckpt_path=checkpoint_path)
 
 # get scores
 perf = pipeline.test_performance
@@ -144,10 +146,10 @@ config.update({"los_info": los_config})
 dm = EhrDataModule(f'datasets/{config["dataset"]}/processed/fold_0', batch_size=config["batch_size"])
 
 # load TCN multitask model
-checkpoint_path = f'logs/test/{config["dataset"]}/{config["task"]}/{config["model"]}-fold0-seed0/checkpoints/best.ckpt'
+checkpoint_path = f'logs/train/{config["dataset"]}/{config["task"]}/{config["model"]}-fold0-seed0/checkpoints/best.ckpt'
 pipeline = DlPipeline(config)
 trainer = L.Trainer(accelerator="cpu", max_epochs=1, logger=False, num_sanity_val_steps=0)
-trainer.test(pipeline, dm)
+trainer.test(pipeline, dm, ckpt_path=checkpoint_path)
 
 # get scores
 embedding = pipeline.embedding
