@@ -1,6 +1,6 @@
 # PyEHR: A Predictive Modeling Toolkit for Electronic Health Records
 
-The repository is an official implementation of our Cell Patterns paper: ["A Comprehensive Benchmark for COVID-19 Predictive Modeling Using Electronic Health Records in Intensive Care"](https://www.cell.com/patterns/fulltext/S2666-3899(24)00050-3) authored by Junyi Gao*, Yinghao Zhu*, Wenqing Wang*, Yasha Wang, Wen Tang, Ewen M. Harrison, Liantao Ma, etc.
+This repository is the official implementation of our paper, ["A Comprehensive Benchmark for COVID-19 Predictive Modeling Using Electronic Health Records in Intensive Care"](https://www.cell.com/patterns/fulltext/S2666-3899(24)00050-3), which was accepted by *Patterns*.
 *\*Equal contribution*
 
 The repository includes various machine learning and deep learning models implemented for predictive modeling tasks using Electronic Health Records (EHR) specifically for COVID-19 patients in Intensive Care Units (ICU).
@@ -118,7 +118,7 @@ This project is brought to you by the following contributors:
 - [Junyi Gao](https://github.com/v1xerunt)
 - [Liantao Ma](https://github.com/massltime)
 
-For a deeper dive into our research, please refer to our [paper](https://doi.org/10.48550/arxiv.2209.07805).
+For a deeper dive into our research, please refer to our *Patterns* [paper](https://www.cell.com/patterns/fulltext/S2666-3899(24)00050-3).
 
 ```
 @article{gao2024comprehensive,
