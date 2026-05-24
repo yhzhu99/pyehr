@@ -16,9 +16,9 @@ class CatBoost():
         learning_rate = params['learning_rate']
         max_depth = params['max_depth']
         if task == "outcome":
-            self.model = CatBoostClassifier(random_state=seed, n_estimators=n_estimators, learning_rate=learning_rate, max_depth=max_depth, verbose=None, silent=True, allow_writing_files=False, loss_function="CrossEntropy")
+            self.model = CatBoostClassifier(random_seed=seed, n_estimators=n_estimators, learning_rate=learning_rate, max_depth=max_depth, verbose=False, allow_writing_files=False, loss_function="CrossEntropy")
         elif task == "los":
-            self.model = CatBoostRegressor(random_state=seed, n_estimators=n_estimators, learning_rate=learning_rate, max_depth=max_depth, verbose=None, silent=True, allow_writing_files=False, loss_function="RMSE")
+            self.model = CatBoostRegressor(random_seed=seed, n_estimators=n_estimators, learning_rate=learning_rate, max_depth=max_depth, verbose=False, allow_writing_files=False, loss_function="RMSE")
         else:
             raise ValueError("Task must be either 'outcome' or 'los'.")
 

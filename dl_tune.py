@@ -66,7 +66,7 @@ def run_experiment():
 
     # train/val/test
     pipeline = DlPipeline(config.as_dict())
-    trainer = L.Trainer(accelerator="gpu", devices=[1], max_epochs=config["epochs"], logger=wandb_logger, callbacks=[early_stopping_callback, checkpoint_callback])
+    trainer = L.Trainer(accelerator="auto", devices="auto", max_epochs=config["epochs"], logger=wandb_logger, callbacks=[early_stopping_callback, checkpoint_callback])
     trainer.fit(pipeline, dm)
     print("Best Score", checkpoint_callback.best_model_score)
 
